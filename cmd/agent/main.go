@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
 	gaugeStorage := metrics.NewGaugeMetricsStorage()
 	gaugeStorage.Gauge["PollCount"] = 0

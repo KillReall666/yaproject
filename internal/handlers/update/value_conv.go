@@ -1,6 +1,10 @@
 package update
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 func FloatValueConv(value string) float64 {
 	var floatVal float64
@@ -13,6 +17,16 @@ func FloatValueConv(value string) float64 {
 }
 
 func IntValueConv(value string) int64 {
-	intVal, _ := strconv.Atoi(value)
+	var intVal int
+	for _, v := range value {
+		if v == 46 {
+			parts := strings.Split(value, ".")
+			fmt.Println(parts[0])
+			intVal, _ = strconv.Atoi(parts[0])
+			return int64(intVal)
+		}
+	}
+
+	intVal, _ = strconv.Atoi(value)
 	return int64(intVal)
 }

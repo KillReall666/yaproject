@@ -70,28 +70,27 @@ func (gms *GaugeMetricsGetter) ProcessUpdating(ctx context.Context) error {
 			}
 
 			gms.Gauge["PollCount"]++
-			//	fmt.Println("Metrics update...")
+			fmt.Println("Metrics update...")
 			tickUpdater.Reset(2 * time.Second)
-		//	fmt.Println(gms.Gauge)
+			//fmt.Println(gms.Gauge)
 
 		case <-tickSender.C:
 			for key, value := range gms.GaugeStorage {
 				if gms.GaugeStorage[key] != "PollCount" {
 					url := "http://localhost:8080/update/gauge/" + key + "/" + value
-					//	fmt.Println(url)
+					fmt.Println(url)
 					_, err := http.Post(url, "text/plain", nil)
 					if err != nil {
 						fmt.Println(err)
 					}
 				}
+			}
 
-				url := "http://localhost:8080/update/count/" + "PollCount" + "/" + gms.GaugeStorage["PollCount"]
-				//fmt.Println(url)
-				_, err := http.Post(url, "text/plain", nil)
-				if err != nil {
-					fmt.Println(err)
-				}
-
+			url := "http://localhost:8080/update/counter/" + "PollCount" + "/" + gms.GaugeStorage["PollCount"]
+			fmt.Println(url)
+			_, err := http.Post(url, "text/plain", nil)
+			if err != nil {
+				fmt.Println(err)
 			}
 
 			fmt.Println("Metrics sended...")

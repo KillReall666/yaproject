@@ -9,6 +9,9 @@ import (
 
 type Service interface {
 	SaveMetrics(request *model.Metrics) error
+	GetFloatMetrics(response *model.Metrics) (float64, error)
+	GetCountMetrics(request *model.Metrics) (int64, error)
+	PrintMetrics(w http.ResponseWriter)
 }
 
 type Handler struct {
@@ -21,6 +24,46 @@ func NewHandler(s Service) *Handler {
 	}
 }
 
+func (h *Handler) HtmlHandle(w http.ResponseWriter, r *http.Request) {
+	h.service.PrintMetrics(w)
+}
+
+func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
+		return
+	}
+	url := getURL(r)
+	urlWithoutPref, err := strings.CutPrefix(url, "/")
+	if err != true {
+		panic(err)
+	}
+
+	requestString := strings.Split(urlWithoutPref, "/")
+
+	if requestString[1] == "counter" {
+		dto := &model.Metrics{
+			Name: requestString[2],
+		}
+		value, err1 := h.service.GetCountMetrics(dto)
+		if err1 != nil {
+			http.Error(w, err1.Error(), http.StatusNotFound)
+		} else {
+			fmt.Fprintln(w, value)
+		}
+	} else {
+		dto := &model.Metrics{
+			Name: requestString[2],
+		}
+		value, err2 := h.service.GetFloatMetrics(dto)
+		if err2 != nil {
+			http.Error(w, err2.Error(), http.StatusNotFound)
+		} else {
+			fmt.Fprintln(w, value)
+		}
+	}
+}
+
 func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 	var intValue int64
 	var floatValue float64
@@ -29,7 +72,7 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := getURL(r)
-	fmt.Println(url)
+
 	urlWithoutPref, err := strings.CutPrefix(url, "/")
 	if err != true {
 		panic(err)
@@ -56,11 +99,10 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 		if metricsString[1] == "counter" {
 			intValue = IntValueConv(metricsString[3])
 			dto := &model.Metrics{
-				Name:    metricsString[1],
+				Name:    metricsString[2],
 				Counter: &intValue,
 			}
 			_ = h.service.SaveMetrics(dto)
-			fmt.Println(dto.Name, *dto.Counter)
 		} else if metricsString[1] == "gauge" {
 			floatValue = FloatValueConv(metricsString[3])
 			dto := &model.Metrics{
@@ -68,8 +110,6 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 				Gauge: &floatValue,
 			}
 			_ = h.service.SaveMetrics(dto)
-			fmt.Println(dto.Name, *dto.Gauge)
 		}
 	}
-
 }
