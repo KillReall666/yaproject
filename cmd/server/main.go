@@ -14,7 +14,7 @@ const (
 	port           = ":8080"
 	endpointUpdate = "/update/*"
 	endpointCount  = "/value/*"
-	endpointHtml   = "/"
+	endpointHTML   = "/"
 )
 
 func main() {
@@ -25,9 +25,13 @@ func main() {
 
 	router.Post(endpointUpdate, updateHandler.PostHandle)
 	router.Get(endpointCount, updateHandler.GetHandle)
-	router.HandleFunc(endpointHtml, updateHandler.HtmlHandle)
-	log.Printf("Starting http server to serve metrics at port%s ", port)
-	err := http.ListenAndServe(port, router)
+	router.HandleFunc(endpointHTML, updateHandler.HTMLHandle)
+
+	setEnv()
+	parseFlags()
+
+	log.Printf("Starting http server to serve metrics at port%s ", addr)
+	err := http.ListenAndServe(addr, router)
 	if err != nil {
 		log.Printf("server is down: %v", err)
 		panic(fmt.Errorf("server is down: %v", err))

@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-const (
-	pollInterval   = 2 * time.Second
-	reportInterval = 10 * time.Second
-)
-
 type GaugeMetricsGetter struct {
 	Gauge        map[string]float64
 	GaugeStorage map[string]string
@@ -25,9 +20,9 @@ func NewGaugeMetricsStorage() *GaugeMetricsGetter {
 	}
 }
 
-func (gms *GaugeMetricsGetter) ProcessUpdating(ctx context.Context) error {
-	tickUpdater := time.NewTicker(pollInterval)
-	tickSender := time.NewTicker(reportInterval)
+func (gms *GaugeMetricsGetter) ProcessUpdating(ctx context.Context, defaultPollInterval int, defaultReportInterval int) error {
+	tickUpdater := time.NewTicker(time.Duration(defaultPollInterval))
+	tickSender := time.NewTicker(time.Duration(defaultReportInterval))
 	for {
 		select {
 		case <-ctx.Done():

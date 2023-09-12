@@ -48,7 +48,7 @@ func (ms *MemStorage) GaugeSetter(name string, gauge float64) {
 func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
-		return 0, fmt.Errorf("Значение с ключом '%s' не найдено", key)
+		return 0, fmt.Errorf("value with key '%s' not found", key)
 	}
 	return ms.storage[key].Gauge, nil
 }
@@ -56,7 +56,7 @@ func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
 func (ms *MemStorage) CountGetter(key string) (int64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
-		return 0, fmt.Errorf("Значение с ключом '%s' не найдено", key)
+		return 0, fmt.Errorf("value with key '%s' not found", key)
 	}
 	return ms.storage[key].Count, nil
 

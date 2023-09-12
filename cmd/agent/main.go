@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers/metrics"
-	"time"
 )
 
 func main() {
+	setEnv()
 
-	ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
+	parseFlag()
+	//ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx := context.Background()
 	gaugeStorage := metrics.NewGaugeMetricsStorage()
 	gaugeStorage.Gauge["PollCount"] = 0
-	err := gaugeStorage.ProcessUpdating(ctx)
+	err := gaugeStorage.ProcessUpdating(ctx, defaultPollInterval, defaultReportInterval)
 	if err != nil {
 		fmt.Println(err)
 	}

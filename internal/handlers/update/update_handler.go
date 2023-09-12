@@ -24,7 +24,7 @@ func NewHandler(s Service) *Handler {
 	}
 }
 
-func (h *Handler) HtmlHandle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HTMLHandle(w http.ResponseWriter, r *http.Request) {
 	h.service.PrintMetrics(w)
 }
 
@@ -35,7 +35,7 @@ func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
 	}
 	url := getURL(r)
 	urlWithoutPref, err := strings.CutPrefix(url, "/")
-	if err != true {
+	if !err {
 		panic(err)
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 	url := getURL(r)
 
 	urlWithoutPref, err := strings.CutPrefix(url, "/")
-	if err != true {
+	if !err {
 		panic(err)
 	}
 
