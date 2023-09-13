@@ -25,7 +25,7 @@ func main() {
 
 	cfg := config.LoadServerConfig()
 	fmt.Println(cfg)
-	log.Printf("Starting http server to serve metrics at port%s ", cfg.Address)
+	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, router)
 	if err != nil {
 		log.Printf("server is down: %v", err)
