@@ -53,7 +53,6 @@ func (ms *MemStorage) CountGetter(key string) (int64, error) {
 		return 0, fmt.Errorf("value with key '%s' not found", key)
 	}
 	return ms.storage[key].Count, nil
-
 }
 
 func (ms *MemStorage) GetAllMetrics() string {

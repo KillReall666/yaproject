@@ -2,10 +2,16 @@ package config
 
 import (
 	"flag"
-	"github.com/KillReall666/yaproject/internal/model"
-	"github.com/caarlos0/env"
 	"log"
+
+	"github.com/caarlos0/env"
 )
+
+type RunConfig struct {
+	Address               string `env:"ADDRESS"`
+	DefaultPollInterval   int    `env:"REPORT_INTERVAL"`
+	DefaultReportInterval int    `env:"POLL_INTERVAL"`
+}
 
 const (
 	defaultServer         = ":8080"
@@ -13,10 +19,10 @@ const (
 	defaultReportInterval = 10
 )
 
-func LoadAgentConfig() model.RunConfig {
-	cfg := model.RunConfig{}
+func LoadAgentConfig() RunConfig {
+	cfg := RunConfig{}
 
-	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics update interval in seconds")
+	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics html interval in seconds")
 	flag.IntVar(&cfg.DefaultReportInterval, "r", defaultReportInterval, "metrics sending interval in seconds")
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.Parse()
@@ -29,8 +35,8 @@ func LoadAgentConfig() model.RunConfig {
 	return cfg
 }
 
-func LoadServerConfig() model.RunConfig {
-	cfg := model.RunConfig{}
+func LoadServerConfig() RunConfig {
+	cfg := RunConfig{}
 
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.Parse()

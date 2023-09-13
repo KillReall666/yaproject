@@ -26,3 +26,4 @@ vendor/
 
 # Test files
 metricstest-darwin-amd64
+.DS_Store

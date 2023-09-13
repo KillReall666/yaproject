@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func FloatValueConv(value string) float64 {
+func floatValueConv(value string) float64 {
 	var floatVal float64
 	for _, v := range value {
 		if v == 46 {
@@ -15,7 +15,7 @@ func FloatValueConv(value string) float64 {
 	return floatVal
 }
 
-func IntValueConv(value string) int64 {
+func intValueConv(value string) int64 {
 	var intVal int
 	for _, v := range value {
 		if v == 46 {

@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"log"
+
+	agent "github.com/KillReall666/yaproject/internal/client"
+	metrics2 "github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
-	"github.com/KillReall666/yaproject/internal/metrics"
 )
 
 func main() {
 	cfg := config.LoadAgentConfig()
-	fmt.Println(cfg)
-	gs := metrics.NewGaugeMetricsStorage()
+	gms := metrics2.NewGaugeMetricsStorage()
+	cli := agent.NewClient(cfg, gms)
 
-	metrics.MetricSender(gs, &cfg)
+	err := cli.Run()
+	if err != nil {
+		log.Fatalf("client died on error: %v", err)
+	}
 
 }
