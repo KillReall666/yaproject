@@ -1,7 +1,6 @@
 package update
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -21,7 +20,6 @@ func IntValueConv(value string) int64 {
 	for _, v := range value {
 		if v == 46 {
 			parts := strings.Split(value, ".")
-			fmt.Println(parts[0])
 			intVal, _ = strconv.Atoi(parts[0])
 			return int64(intVal)
 		}
