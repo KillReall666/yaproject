@@ -30,7 +30,7 @@ func MetricSender(gs *GaugeMetricsGetter, cfg *model.RunConfig) {
 						fmt.Println(err)
 						continue
 					}
-					defer resp.Body.Close()
+					resp.Body.Close()
 				}
 			}
 
@@ -39,7 +39,7 @@ func MetricSender(gs *GaugeMetricsGetter, cfg *model.RunConfig) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			defer resp.Body.Close()
+			resp.Body.Close()
 			fmt.Println("Metrics sent...")
 			fmt.Println(gs.GaugeStorage)
 			tickSender.Reset(10 * time.Second)
