@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"html"
-	"net/http"
 )
 
 type Metrics struct {
@@ -12,7 +11,6 @@ type Metrics struct {
 }
 type MemStorage struct {
 	storage map[string]*Metrics
-	//mtx     *sync.Mutex
 }
 
 func NewMemStorage() *MemStorage {
@@ -22,7 +20,6 @@ func NewMemStorage() *MemStorage {
 }
 
 func (ms *MemStorage) CountSetter(name string, count int64) {
-	//ms.mtx.Lock()
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
@@ -30,11 +27,9 @@ func (ms *MemStorage) CountSetter(name string, count int64) {
 		return
 	}
 	ms.storage[name].Count += count
-	//ms.mtx.Unlock()
 }
 
 func (ms *MemStorage) GaugeSetter(name string, gauge float64) {
-	//ms.mtx.Lock()
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
@@ -42,7 +37,6 @@ func (ms *MemStorage) GaugeSetter(name string, gauge float64) {
 		return
 	}
 	ms.storage[name].Gauge = gauge
-	//ms.mtx.Unlock()
 }
 
 func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
@@ -62,11 +56,28 @@ func (ms *MemStorage) CountGetter(key string) (int64, error) {
 
 }
 
-func (ms *MemStorage) GetAllMetrics(w http.ResponseWriter) {
-	htmls := "Metric List\n"
+func (ms *MemStorage) GetAllMetrics() string {
+	htmlPage := "Metric List\n"
 	for key, metric := range ms.storage {
-		htmls += fmt.Sprintf("%v: %v (%v)\n", html.EscapeString(key), metric.Count, metric.Gauge)
+		if key != "PollCount" {
+			htmlPage += fmt.Sprintf("%v: %v\n", html.EscapeString(key), metric.Gauge)
+		} else {
+			htmlPage += fmt.Sprintf("%v: %v\n", html.EscapeString(key), metric.Count)
+		}
 	}
-	htmls += ""
-	fmt.Fprint(w, htmls)
+	htmlPage += ""
+	return htmlPage
+
+}
+
+func (ms *MemStorage) Print() {
+	var metrics string
+	for key, value := range ms.storage {
+		if key != "PollCount" {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+		} else {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+		}
+	}
+	fmt.Println("New received metrics: ", metrics)
 }

@@ -7,25 +7,27 @@ import (
 	"strings"
 )
 
-type Service interface {
+type metricsSrv interface {
 	SaveMetrics(request *model.Metrics) error
 	GetFloatMetrics(response *model.Metrics) (float64, error)
 	GetCountMetrics(request *model.Metrics) (int64, error)
-	PrintMetrics(w http.ResponseWriter)
+	PrintForHTML() string
+	MetricsPrint()
 }
 
 type Handler struct {
-	service Service
+	service metricsSrv
 }
 
-func NewHandler(s Service) *Handler {
+func NewHandler(s metricsSrv) *Handler {
 	return &Handler{
 		service: s,
 	}
 }
 
 func (h *Handler) HTMLHandle(w http.ResponseWriter, r *http.Request) {
-	h.service.PrintMetrics(w)
+	htmlPage := h.service.PrintForHTML()
+	fmt.Fprint(w, htmlPage)
 }
 
 func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +42,11 @@ func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestString := strings.Split(urlWithoutPref, "/")
+
+	if len(requestString) < 3 {
+		http.Error(w, "error 404", http.StatusNotFound)
+		return
+	}
 
 	if requestString[1] == "counter" {
 		dto := &model.Metrics{
@@ -112,4 +119,5 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 			_ = h.service.SaveMetrics(dto)
 		}
 	}
+	h.service.MetricsPrint()
 }

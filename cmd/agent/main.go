@@ -1,22 +1,16 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/handlers/metrics"
+	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/metrics"
 )
 
 func main() {
-	setEnv()
+	cfg := config.LoadAgentConfig()
+	fmt.Println(cfg)
+	gs := metrics.NewGaugeMetricsStorage()
 
-	parseFlag()
-	//ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
-	ctx := context.Background()
-	gaugeStorage := metrics.NewGaugeMetricsStorage()
-	gaugeStorage.Gauge["PollCount"] = 0
-	err := gaugeStorage.ProcessUpdating(ctx, defaultPollInterval, defaultReportInterval)
-	if err != nil {
-		fmt.Println(err)
-	}
+	metrics.MetricSender(gs, &cfg)
 
 }

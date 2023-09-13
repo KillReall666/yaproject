@@ -1,18 +1,20 @@
 package service
 
 import (
+	"github.com/KillReall666/yaproject/internal/metrics"
 	"github.com/KillReall666/yaproject/internal/model"
 	"github.com/KillReall666/yaproject/internal/storage"
-	"net/http"
 )
 
 type Service struct {
-	repository *storage.MemStorage
+	repository     *storage.MemStorage
+	metricsStorage *metrics.GaugeMetricsGetter
 }
 
-func NewService(repo *storage.MemStorage) *Service {
+func NewService(repo *storage.MemStorage, memRepo *metrics.GaugeMetricsGetter) *Service {
 	return &Service{
-		repository: repo,
+		repository:     repo,
+		metricsStorage: memRepo,
 	}
 }
 
@@ -40,6 +42,11 @@ func (s *Service) GetCountMetrics(request *model.Metrics) (int64, error) {
 	return value, err
 }
 
-func (s *Service) PrintMetrics(w http.ResponseWriter) {
-	s.repository.GetAllMetrics(w)
+func (s *Service) PrintForHTML() string {
+	htmlPage := s.repository.GetAllMetrics()
+	return htmlPage
+}
+
+func (s *Service) MetricsPrint() {
+	s.repository.Print()
 }
