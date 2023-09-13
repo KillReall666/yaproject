@@ -11,9 +11,9 @@ import (
 
 func main() {
 	cfg := config.LoadAgentConfig()
-	gs := metrics.NewGaugeMetricsStorage()
+	gms := metrics.NewGaugeMetricsStorage()
 	store := storage.NewMemStorage()
-	serv := service.NewService(store, gs)
+	serv := service.NewService(store, gms)
 
 	tickUpdater := time.NewTicker(2 * time.Second)
 	tickSender := time.NewTicker(10 * time.Second)
@@ -24,17 +24,17 @@ func main() {
 	for {
 		select {
 		case <-tickUpdater.C:
-			gs.UpdateMetrics()
-			gs.Gauge["PollCount"]++
-			for key := range gs.Gauge {
-				gs.GaugeStorage[key] = fmt.Sprintf("%f", gs.Gauge[key])
+			gms.UpdateMetrics()
+			gms.Gauge["PollCount"]++
+			for key := range gms.Gauge {
+				gms.GaugeStorage[key] = fmt.Sprintf("%f", gms.Gauge[key])
 			}
 			fmt.Println("Metrics update...")
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
 			go serv.MetricsSender(&cfg)
-			fmt.Println(gs.GaugeStorage)
+			fmt.Println(gms.GaugeStorage)
 			tickSender.Reset(10 * time.Second)
 		}
 	}

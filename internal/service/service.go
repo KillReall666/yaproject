@@ -1,9 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"github.com/KillReall666/yaproject/internal/metrics"
 	"github.com/KillReall666/yaproject/internal/model"
 	"github.com/KillReall666/yaproject/internal/storage"
+	"net/http"
 )
 
 type Service struct {
@@ -49,4 +51,26 @@ func (s *Service) PrintForHTML() string {
 
 func (s *Service) MetricsPrint() {
 	s.repository.Print()
+}
+
+func (s *Service) MetricsSender(cfg *model.RunConfig) {
+	for key, value := range s.metricsStorage.GaugeStorage {
+		if s.metricsStorage.GaugeStorage[key] != "PollCount" {
+			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
+			resp, err := http.Post(url, "text/plain", nil)
+			if err != nil {
+				fmt.Println("error sending request:", err)
+				continue
+			}
+			defer resp.Body.Close()
+			//fmt.Println("request sent successfully:", resp.Status)
+		}
+
+		url := "http://" + cfg.Address + "/update/counter/PollCount/" + s.metricsStorage.GaugeStorage["PollCount"]
+		resp, err := http.Post(url, "text/plain", nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer resp.Body.Close()
+	}
 }

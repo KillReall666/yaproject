@@ -24,7 +24,7 @@ func main() {
 	router.HandleFunc("/", updateHandler.HTMLHandle)
 
 	cfg := config.LoadServerConfig()
-	fmt.Println(cfg)
+
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, router)
 	if err != nil {
