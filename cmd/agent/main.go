@@ -13,7 +13,7 @@ func main() {
 	cfg := config.LoadAgentConfig()
 	gms := metrics.NewGaugeMetricsStorage()
 	store := storage.NewMemStorage()
-	serv := service.NewService(store, gms)
+	client := service.NewService(store, gms)
 
 	tickUpdater := time.NewTicker(2 * time.Second)
 	tickSender := time.NewTicker(10 * time.Second)
@@ -33,7 +33,7 @@ func main() {
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
-			go serv.MetricsSender(&cfg)
+			go client.MetricsSender(&cfg)
 			fmt.Println(gms.GaugeStorage)
 			tickSender.Reset(10 * time.Second)
 		}

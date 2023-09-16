@@ -7,21 +7,18 @@ import (
 	"github.com/KillReall666/yaproject/internal/metrics"
 	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 )
 
+var UpdateHandler *update.Handler
+
 func main() {
-	router := chi.NewRouter()
 	store := storage.NewMemStorage()
 	metricsStore := metrics.NewGaugeMetricsStorage()
 	serv := service.NewService(store, metricsStore)
-	updateHandler := update.NewHandler(serv)
-
-	router.Post("/update/*", updateHandler.PostHandle)
-	router.Get("/value/*", updateHandler.GetHandle)
-	router.HandleFunc("/", updateHandler.HTMLHandle)
+	UpdateHandler = update.NewHandler(serv)
+	router := MyNewRouter()
 
 	cfg := config.LoadServerConfig()
 

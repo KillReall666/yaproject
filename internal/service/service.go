@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/metrics"
 	"github.com/KillReall666/yaproject/internal/model"
 	"github.com/KillReall666/yaproject/internal/storage"
@@ -53,7 +54,7 @@ func (s *Service) MetricsPrint() {
 	s.repository.Print()
 }
 
-func (s *Service) MetricsSender(cfg *model.RunConfig) {
+func (s *Service) MetricsSender(cfg *config.RunConfig) {
 	for key, value := range s.metricsStorage.GaugeStorage {
 		if s.metricsStorage.GaugeStorage[key] != "PollCount" {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value

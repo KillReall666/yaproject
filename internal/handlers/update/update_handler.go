@@ -16,21 +16,21 @@ type metricsSrv interface {
 }
 
 type Handler struct {
-	service metricsSrv
+	metricsSrv metricsSrv
 }
 
 func NewHandler(s metricsSrv) *Handler {
 	return &Handler{
-		service: s,
+		metricsSrv: s,
 	}
 }
 
 func (h *Handler) HTMLHandle(w http.ResponseWriter, r *http.Request) {
-	htmlPage := h.service.PrintForHTML()
+	htmlPage := h.metricsSrv.PrintForHTML()
 	fmt.Fprint(w, htmlPage)
 }
 
-func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
@@ -52,26 +52,29 @@ func (h *Handler) GetHandle(w http.ResponseWriter, r *http.Request) {
 		dto := &model.Metrics{
 			Name: requestString[2],
 		}
-		value, err1 := h.service.GetCountMetrics(dto)
+		value, err1 := h.metricsSrv.GetCountMetrics(dto)
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
 		}
-	} else {
+	} else if requestString[1] == "gauge" {
 		dto := &model.Metrics{
 			Name: requestString[2],
 		}
-		value, err2 := h.service.GetFloatMetrics(dto)
+		value, err2 := h.metricsSrv.GetFloatMetrics(dto)
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
 		}
+	} else {
+		http.Error(w, "error 404", http.StatusBadRequest)
+		return
 	}
 }
 
-func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	var intValue int64
 	var floatValue float64
 	if r.Method != http.MethodPost {
@@ -93,7 +96,7 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	numForSetMetrics := IntValueConv(metricsString[3])
-
+	fmt.Println(metricsString)
 	if metricsString[1] != "counter" && metricsString[1] != "gauge" || numForSetMetrics == 0 {
 		http.Error(w, "error 400", http.StatusBadRequest)
 	} else if len(metricsString) < 4 {
@@ -109,15 +112,15 @@ func (h *Handler) PostHandle(w http.ResponseWriter, r *http.Request) {
 				Name:    metricsString[2],
 				Counter: &intValue,
 			}
-			_ = h.service.SaveMetrics(dto)
+			_ = h.metricsSrv.SaveMetrics(dto)
 		} else if metricsString[1] == "gauge" {
 			floatValue = FloatValueConv(metricsString[3])
 			dto := &model.Metrics{
 				Name:  metricsString[2],
 				Gauge: &floatValue,
 			}
-			_ = h.service.SaveMetrics(dto)
+			_ = h.metricsSrv.SaveMetrics(dto)
 		}
 	}
-	h.service.MetricsPrint()
+	//	h.metricsSrv.MetricsPrint()
 }
