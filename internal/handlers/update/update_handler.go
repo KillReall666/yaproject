@@ -122,5 +122,5 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.metricsSrv.SaveMetrics(dto)
 		}
 	}
-	h.metricsSrv.MetricsPrint()
+	//h.metricsSrv.MetricsPrint()
 }
