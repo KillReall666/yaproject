@@ -37,13 +37,14 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	metricsString := getURL(r)
-	metricsType := metricsString[1]
-	metricsName := metricsString[2]
 
 	if len(metricsString) < 3 {
 		http.Error(w, "error 404", http.StatusNotFound)
 		return
 	}
+
+	metricsType := metricsString[1]
+	metricsName := metricsString[2]
 
 	if metricsType == "counter" {
 		dto := &model.Metrics{
@@ -83,14 +84,15 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	var floatValue float64
 
 	metricsString := getURL(r)
-	metricsType := metricsString[1]
-	metricsName := metricsString[2]
-	metricsValue := metricsString[3]
 
 	if len(metricsString) < 4 {
 		http.Error(w, "error 404", http.StatusNotFound)
 		return
 	}
+
+	metricsType := metricsString[1]
+	metricsName := metricsString[2]
+	metricsValue := metricsString[3]
 
 	numForSetMetrics := IntValueConv(metricsValue)
 
