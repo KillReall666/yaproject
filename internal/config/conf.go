@@ -6,6 +6,12 @@ import (
 	"log"
 )
 
+type RunConfig struct {
+	Address               string `env:"ADDRESS"`
+	DefaultPollInterval   int    `env:"REPORT_INTERVAL"`
+	DefaultReportInterval int    `env:"POLL_INTERVAL"`
+}
+
 const (
 	defaultServer         = ":8080"
 	defaultPollInterval   = 2

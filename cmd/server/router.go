@@ -6,8 +6,8 @@ import (
 
 func MyNewRouter() (router chi.Router) {
 	router = chi.NewRouter()
-	router.Post("/update/*", UpdateHandler.UpdateMetrics)
-	router.Get("/value/*", UpdateHandler.GetMetrics)
-	router.HandleFunc("/", UpdateHandler.HTMLHandle)
+	router.Post("/update/*", updateHandler.UpdateMetrics)
+	router.Get("/value/*", updateHandler.GetMetrics)
+	router.HandleFunc("/", updateHandler.HTMLOutput)
 	return router
 }

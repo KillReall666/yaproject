@@ -1,8 +1,19 @@
 package update
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
-func getURL(r *http.Request) string {
+func getURL(r *http.Request) []string {
 	url := r.URL.String()
-	return url
+
+	urlWithoutPref, err := strings.CutPrefix(url, "/")
+	if !err {
+		panic(err)
+	}
+
+	requestString := strings.Split(urlWithoutPref, "/")
+
+	return requestString
 }

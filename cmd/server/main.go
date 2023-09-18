@@ -11,13 +11,13 @@ import (
 	"net/http"
 )
 
-var UpdateHandler *update.Handler
+var updateHandler *update.Handler
 
 func main() {
 	store := storage.NewMemStorage()
 	metricsStore := metrics.NewGaugeMetricsStorage()
 	serv := service.NewService(store, metricsStore)
-	UpdateHandler = update.NewHandler(serv)
+	updateHandler = update.NewHandler(serv)
 	router := MyNewRouter()
 
 	cfg := config.LoadServerConfig()

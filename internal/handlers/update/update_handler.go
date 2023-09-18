@@ -2,9 +2,9 @@ package update
 
 import (
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/model"
 	"net/http"
-	"strings"
+
+	"github.com/KillReall666/yaproject/internal/model"
 )
 
 type metricsSrv interface {
@@ -25,7 +25,7 @@ func NewHandler(s metricsSrv) *Handler {
 	}
 }
 
-func (h *Handler) HTMLHandle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HTMLOutput(w http.ResponseWriter, r *http.Request) {
 	htmlPage := h.metricsSrv.PrintForHTML()
 	fmt.Fprint(w, htmlPage)
 }
@@ -35,22 +35,19 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
-	url := getURL(r)
-	urlWithoutPref, err := strings.CutPrefix(url, "/")
-	if !err {
-		panic(err)
-	}
 
-	requestString := strings.Split(urlWithoutPref, "/")
+	metricsString := getURL(r)
+	metricsType := metricsString[1]
+	metricsName := metricsString[2]
 
-	if len(requestString) < 3 {
+	if len(metricsString) < 3 {
 		http.Error(w, "error 404", http.StatusNotFound)
 		return
 	}
 
-	if requestString[1] == "counter" {
+	if metricsType == "counter" {
 		dto := &model.Metrics{
-			Name: requestString[2],
+			Name: metricsName,
 		}
 		value, err1 := h.metricsSrv.GetCountMetrics(dto)
 		if err1 != nil {
@@ -58,9 +55,10 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintln(w, value)
 		}
-	} else if requestString[1] == "gauge" {
+
+	} else if metricsType == "gauge" {
 		dto := &model.Metrics{
-			Name: requestString[2],
+			Name: metricsName,
 		}
 		value, err2 := h.metricsSrv.GetFloatMetrics(dto)
 		if err2 != nil {
@@ -68,6 +66,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintln(w, value)
 		}
+
 	} else {
 		http.Error(w, "error 404", http.StatusBadRequest)
 		return
@@ -75,29 +74,27 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
-	var intValue int64
-	var floatValue float64
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
 	}
-	url := getURL(r)
 
-	urlWithoutPref, err := strings.CutPrefix(url, "/")
-	if !err {
-		panic(err)
-	}
+	var intValue int64
+	var floatValue float64
 
-	metricsString := strings.Split(urlWithoutPref, "/")
+	metricsString := getURL(r)
+	metricsType := metricsString[1]
+	metricsName := metricsString[2]
+	metricsValue := metricsString[3]
 
 	if len(metricsString) < 4 {
 		http.Error(w, "error 404", http.StatusNotFound)
 		return
 	}
 
-	numForSetMetrics := IntValueConv(metricsString[3])
-	fmt.Println(metricsString)
-	if metricsString[1] != "counter" && metricsString[1] != "gauge" || numForSetMetrics == 0 {
+	numForSetMetrics := IntValueConv(metricsValue)
+
+	if metricsType != "counter" && metricsType != "gauge" || numForSetMetrics == 0 {
 		http.Error(w, "error 400", http.StatusBadRequest)
 	} else if len(metricsString) < 4 {
 		http.Error(w, "error 404", http.StatusNotFound)
@@ -106,21 +103,22 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(metricsString) == 4 {
-		if metricsString[1] == "counter" {
-			intValue = IntValueConv(metricsString[3])
+		if metricsType == "counter" {
+			intValue = IntValueConv(metricsValue)
 			dto := &model.Metrics{
-				Name:    metricsString[2],
+				Name:    metricsName,
 				Counter: &intValue,
 			}
 			_ = h.metricsSrv.SaveMetrics(dto)
-		} else if metricsString[1] == "gauge" {
-			floatValue = FloatValueConv(metricsString[3])
+
+		} else if metricsType == "gauge" {
+			floatValue = FloatValueConv(metricsValue)
 			dto := &model.Metrics{
-				Name:  metricsString[2],
+				Name:  metricsName,
 				Gauge: &floatValue,
 			}
 			_ = h.metricsSrv.SaveMetrics(dto)
 		}
 	}
-	//	h.metricsSrv.MetricsPrint()
+	h.metricsSrv.MetricsPrint()
 }

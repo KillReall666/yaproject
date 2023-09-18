@@ -56,7 +56,16 @@ func (s *Service) MetricsPrint() {
 
 func (s *Service) MetricsSender(cfg *config.RunConfig) {
 	for key, value := range s.metricsStorage.GaugeStorage {
-		if s.metricsStorage.GaugeStorage[key] != "PollCount" {
+		switch s.metricsStorage.GaugeStorage[key] {
+		case "PollCount":
+			url := "http://" + cfg.Address + "/update/counter/PollCount/" + s.metricsStorage.GaugeStorage["PollCount"]
+			resp, err := http.Post(url, "text/plain", nil)
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer resp.Body.Close()
+
+		default:
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
@@ -66,12 +75,5 @@ func (s *Service) MetricsSender(cfg *config.RunConfig) {
 			defer resp.Body.Close()
 			//fmt.Println("request sent successfully:", resp.Status)
 		}
-
-		url := "http://" + cfg.Address + "/update/counter/PollCount/" + s.metricsStorage.GaugeStorage["PollCount"]
-		resp, err := http.Post(url, "text/plain", nil)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer resp.Body.Close()
 	}
 }

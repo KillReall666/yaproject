@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/metrics"
 	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
-	"time"
 )
 
 func main() {
