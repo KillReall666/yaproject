@@ -1,11 +1,11 @@
-package update
+package handlers
 
 import (
 	"net/http"
 	"strings"
 )
 
-func getURL(r *http.Request) []string {
+func GetURL(r *http.Request) []string {
 	url := r.URL.String()
 
 	urlWithoutPref, err := strings.CutPrefix(url, "/")

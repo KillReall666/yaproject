@@ -2,8 +2,9 @@ package config
 
 import (
 	"flag"
-	"github.com/caarlos0/env"
 	"log"
+
+	"github.com/caarlos0/env"
 )
 
 type RunConfig struct {
@@ -21,7 +22,7 @@ const (
 func LoadAgentConfig() RunConfig {
 	cfg := RunConfig{}
 
-	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics update interval in seconds")
+	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics html interval in seconds")
 	flag.IntVar(&cfg.DefaultReportInterval, "r", defaultReportInterval, "metrics sending interval in seconds")
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.Parse()

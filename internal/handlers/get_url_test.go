@@ -1,4 +1,4 @@
-package update
+package handlers
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -17,14 +17,14 @@ func TestGetUrl(t *testing.T) {
 		{
 			name:   "first post-request test with value",
 			method: http.MethodPost,
-			url:    "/update/gauge/alloc/666",
-			want:   []string{"update", "gauge", "alloc", "666"},
+			url:    "/html/gauge/alloc/666",
+			want:   []string{"html", "gauge", "alloc", "666"},
 		},
 		{
 			name:   "second post-request test without value",
 			method: http.MethodPost,
-			url:    "/update/gauge/alloc",
-			want:   []string{"update", "gauge", "alloc"},
+			url:    "/html/gauge/alloc",
+			want:   []string{"html", "gauge", "alloc"},
 		},
 		{
 			name:   "first get-request test with value",
