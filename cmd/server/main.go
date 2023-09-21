@@ -20,7 +20,7 @@ func main() {
 
 	getHandler := get.NewGetHandler(serv)
 	updateHandler := update.NewUpdateHandler(serv)
-	htmlHandler := html.NewHtmlHandler(serv)
+	htmlHandler := html.NewHTMLHandler(serv)
 
 	cfg := config.LoadServerConfig()
 

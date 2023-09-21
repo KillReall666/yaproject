@@ -13,7 +13,7 @@ type Handler struct {
 	metricsHTML metricsHTML
 }
 
-func NewHtmlHandler(s metricsHTML) *Handler {
+func NewHTMLHandler(s metricsHTML) *Handler {
 	return &Handler{
 		metricsHTML: s,
 	}
