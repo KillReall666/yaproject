@@ -43,7 +43,7 @@ func TestGetUrl(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
-			assert.Equal(t, getURL(r), tt.want)
+			assert.Equal(t, GetURL(r), tt.want)
 		})
 	}
 }
