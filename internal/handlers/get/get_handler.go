@@ -48,6 +48,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
+			w.WriteHeader(http.StatusOK)
 		}
 
 	} else if metricsType == "gauge" {
@@ -59,6 +60,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
+			w.WriteHeader(http.StatusOK)
 		}
 
 	} else {
