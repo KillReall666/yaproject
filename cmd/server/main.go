@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	logger2 "github.com/KillReall666/yaproject/internal/logger"
+
 	"log"
 	"net/http"
 
@@ -16,6 +18,7 @@ import (
 )
 
 func main() {
+
 	mylog, err1 := logger2.InitLogger()
 	if err1 != nil {
 		panic("cannot initialize zap")
@@ -32,8 +35,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+
 	r.Post("/update/*", mylog.PostLogger(updateHandler.UpdateMetrics))
 	r.Get("/value/*", mylog.GetLogger(getHandler.GetMetrics))
+
+	r.Post("/update/*", updateHandler.UpdateMetrics)
+	r.Get("/value/*", getHandler.GetMetrics)
+
 	r.HandleFunc("/", htmlHandler.HTMLOutput)
 
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)

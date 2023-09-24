@@ -43,10 +43,12 @@ func (c *Client) Run() error {
 			tickSender.Reset(10 * time.Second)
 		}
 	}
+
 }
 
 func (c *Client) MetricsSender(cfg *config.RunConfig) {
 	for key, value := range c.gms.GaugeStorage {
+
 		if key == "PollCount" {
 			url := "http://" + cfg.Address + "/update/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
 			resp, err := http.Post(url, "text/plain", nil)
@@ -54,6 +56,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) {
 				fmt.Println(err)
 			}
 			defer resp.Body.Close()
+
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
 			resp, err := http.Post(url, "text/plain", nil)
@@ -62,7 +65,9 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) {
 				continue
 			}
 			defer resp.Body.Close()
-			fmt.Println("request sent successfully:", resp.Status)
+
+			//fmt.Println("request sent successfully:", resp.Status)
+
 		}
 	}
 }
