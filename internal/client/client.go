@@ -62,7 +62,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) {
 				continue
 			}
 			defer resp.Body.Close()
-			//fmt.Println("request sent successfully:", resp.Status)
+			fmt.Println("request sent successfully:", resp.Status)
 		}
 	}
 }
