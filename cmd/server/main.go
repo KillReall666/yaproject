@@ -33,7 +33,11 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Post("/update/*", mylog.PostLogger(updateHandler.UpdateMetrics))
+	r.Post("/update/", mylog.PostLogger(updateHandler.UpdateJSONMetrics))
+	r.Post("/value/", mylog.GetLogger(getHandler.GetMetricsJSON))
+
 	r.Get("/value/*", mylog.GetLogger(getHandler.GetMetrics))
+
 	r.HandleFunc("/", htmlHandler.HTMLOutput)
 
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)

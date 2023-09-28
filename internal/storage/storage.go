@@ -75,7 +75,7 @@ func (ms *MemStorage) Print() {
 		if key != "PollCount" {
 			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
 		} else {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
 		}
 	}
 	fmt.Println("New received metrics: ", metrics)

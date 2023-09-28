@@ -91,11 +91,11 @@ func (l Logger) GetLogger(h http.HandlerFunc) http.HandlerFunc {
 		duration := time.Since(start)
 
 		l.Sugar.Infoln(
-			"uri", r.RequestURI,
-			"method", r.Method,
-			"status", respData.status,
-			"duration", duration,
-			"size", respData.size,
+			"uri:", r.RequestURI,
+			"method:", r.Method,
+			"status:", respData.status,
+			"duration:", duration,
+			"size:", respData.size,
 		)
 	}
 	return logFn

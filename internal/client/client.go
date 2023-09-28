@@ -1,7 +1,11 @@
 package client
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/KillReall666/yaproject/internal/handlers"
+	"github.com/KillReall666/yaproject/internal/model"
 	"net/http"
 	"time"
 
@@ -30,22 +34,61 @@ func (c *Client) Run() error {
 		select {
 		case <-tickUpdater.C:
 			c.gms.UpdateMetrics()
-			c.gms.Gauge["PollCount"]++
-			for key := range c.gms.Gauge {
-				c.gms.GaugeStorage[key] = fmt.Sprintf("%f", c.gms.Gauge[key])
-			}
-			fmt.Println("Metrics update...")
+			c.gms.Counter["PollCount"]++
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
 			c.MetricsSender(&c.cfg)
-			fmt.Println(c.gms.GaugeStorage)
 			tickSender.Reset(10 * time.Second)
 		}
 	}
 }
 
-func (c *Client) MetricsSender(cfg *config.RunConfig) {
+func (c *Client) MetricsSender(cfg *config.RunConfig) error {
+	for key, value := range c.gms.Gauge {
+		metric := model.MetricsJSON{
+			ID:    key,
+			MType: "gauge",
+			Value: handlers.Float64Ptr(value),
+		}
+		data, err := json.Marshal(metric)
+		if err != nil {
+			return err
+		}
+		resp, err := http.Post("http://"+cfg.Address+"/update/", "application/json", bytes.NewBuffer(data))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("HTTP request failed with status code: %d", resp.StatusCode)
+		}
+	}
+
+	for key, val := range c.gms.Counter {
+		metric := model.MetricsJSON{
+			ID:    key,
+			MType: "counter",
+			Delta: handlers.Int64Ptr(val),
+		}
+		data, err := json.Marshal(metric)
+		if err != nil {
+			return err
+		}
+		resp, err := http.Post("http://"+cfg.Address+"/update/", "application/json", bytes.NewBuffer(data))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("HTTP request failed with status code: %d", resp.StatusCode)
+		}
+	}
+	return nil
+}
+
+func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 	for key, value := range c.gms.GaugeStorage {
 		if key == "PollCount" {
 			url := "http://" + cfg.Address + "/update/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
@@ -62,7 +105,6 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) {
 				continue
 			}
 			defer resp.Body.Close()
-			fmt.Println("request sent successfully:", resp.Status)
 		}
 	}
 }

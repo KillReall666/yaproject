@@ -7,11 +7,11 @@ import (
 
 func floatValueConv(value string) float64 {
 	var floatVal float64
-	for _, v := range value {
-		if v == 46 {
-			floatVal, _ = strconv.ParseFloat(value, 64)
-		}
-	}
+	//for _, v := range value {
+	//	if v == 46 {
+	floatVal, _ = strconv.ParseFloat(value, 64)
+	//	}
+	//}
 	return floatVal
 }
 
