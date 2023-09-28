@@ -1,11 +1,13 @@
 package client
 
 import (
+
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
+
 	"net/http"
 	"time"
 
@@ -99,12 +101,15 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 			defer resp.Body.Close()
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
+
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
 				fmt.Println("error sending request:", err)
 				continue
 			}
 			defer resp.Body.Close()
+
+
 		}
 	}
 }

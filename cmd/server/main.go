@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	logger2 "github.com/KillReall666/yaproject/internal/logger"
+=======
+
 	"log"
 	"net/http"
 
@@ -16,6 +19,7 @@ import (
 )
 
 func main() {
+
 	mylog, err1 := logger2.InitLogger()
 	if err1 != nil {
 		panic("cannot initialize zap")
@@ -32,11 +36,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+
 	r.Post("/update/*", mylog.PostLogger(updateHandler.UpdateMetrics))
 	r.Post("/update/", mylog.PostLogger(updateHandler.UpdateJSONMetrics))
 	r.Post("/value/", mylog.GetLogger(getHandler.GetMetricsJSON))
 
 	r.Get("/value/*", mylog.GetLogger(getHandler.GetMetrics))
+
 
 	r.HandleFunc("/", htmlHandler.HTMLOutput)
 

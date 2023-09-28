@@ -36,7 +36,9 @@ func TestValueConvFloat(t *testing.T) {
 		{name: "simple float", val: "1.23", want: 1.23},
 		{name: "negative float", val: "-1.23", want: -1.23},
 		{name: "zero float", val: "0.0", want: 0.000000},
+
 		{name: "without zero", val: "123", want: 123.0},
+
 	}
 
 	for _, tt := range tests {

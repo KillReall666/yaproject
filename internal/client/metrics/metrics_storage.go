@@ -52,5 +52,7 @@ func (gms *GaugeMetricsGetter) UpdateMetrics() map[string]string {
 	gms.Gauge["TotalAlloc"] = float64(v.TotalAlloc)
 	gms.Gauge["RandomValue"] = rand.Float64()
 
+
+
 	return gms.GaugeStorage
 }
