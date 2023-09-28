@@ -1,11 +1,15 @@
 package client
 
 import (
+
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
+
+	"fmt"
+
 	"net/http"
 	"time"
 
@@ -34,11 +38,20 @@ func (c *Client) Run() error {
 		select {
 		case <-tickUpdater.C:
 			c.gms.UpdateMetrics()
+
 			c.gms.Counter["PollCount"]++
+
+			c.gms.Gauge["PollCount"]++
+			for key := range c.gms.Gauge {
+				c.gms.GaugeStorage[key] = fmt.Sprintf("%f", c.gms.Gauge[key])
+			}
+			fmt.Println("Metrics update...")
+
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
 			c.MetricsSender(&c.cfg)
+
 			tickSender.Reset(10 * time.Second)
 		}
 	}
@@ -92,19 +105,41 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 	for key, value := range c.gms.GaugeStorage {
 		if key == "PollCount" {
 			url := "http://" + cfg.Address + "/update/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
+
+			fmt.Println(c.gms.GaugeStorage)
+			tickSender.Reset(10 * time.Second)
+		}
+	}
+	//return nil
+}
+
+func (c *Client) MetricsSender(cfg *config.RunConfig) {
+	for key, value := range c.gms.GaugeStorage {
+		switch c.gms.GaugeStorage[key] {
+		case "PollCount":
+			url := "http://" + cfg.Address + "/html/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
+
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
 				fmt.Println(err)
 			}
 			defer resp.Body.Close()
+
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
+
+
+		default:
+			url := "http://" + cfg.Address + "/html/gauge/" + key + "/" + value
+
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
 				fmt.Println("error sending request:", err)
 				continue
 			}
 			defer resp.Body.Close()
+			//fmt.Println("request sent successfully:", resp.Status)
+
 		}
 	}
 }

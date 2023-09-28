@@ -1,8 +1,10 @@
 package update
 
 import (
+
 	"bytes"
 	"encoding/json"
+
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -12,8 +14,10 @@ import (
 type metricsUpdate interface {
 	SaveMetrics(request *model.Metrics) error
 	MetricsPrint()
+
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
+
 }
 
 type Handler struct {
@@ -76,6 +80,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	//h.metricsUpdate.MetricsPrint()
 }
+
 
 func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -149,3 +154,4 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 
 }
+
