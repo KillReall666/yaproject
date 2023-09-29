@@ -1,6 +1,7 @@
 package get
 
 import (
+
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -51,6 +52,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintln(w, value)
 			w.WriteHeader(http.StatusOK)
+
 		}
 
 	} else if metricsType == "gauge" {
@@ -128,3 +130,4 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+

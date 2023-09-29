@@ -85,7 +85,9 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 1",
 			method: http.MethodPost,
+
 			url:    "/update/gauge/Alloc",
+
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -94,7 +96,9 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 2",
 			method: http.MethodPost,
+
 			url:    "/update/counter",
+
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -103,7 +107,9 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 3",
 			method: http.MethodPost,
+
 			url:    "/update",
+
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -112,7 +118,9 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "unknown type of metric", // can crash if in PostHandler called h.service.MetricsPrint()
 			method: http.MethodPost,
+
 			url:    "/update/unknown_type/Alloc/",
+
 			response: response{
 				requestCode: http.StatusBadRequest,
 				contentType: "text/plain",
