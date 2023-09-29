@@ -74,7 +74,6 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.metricsUpdate.SaveMetrics(dto)
 		}
 	}
-	//h.metricsUpdate.MetricsPrint()
 }
 
 func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +107,6 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = h.metricsUpdate.SaveMetrics(dto)
 	}
-	//h.metricsUpdate.MetricsPrint()
 
 	dto := &model.Metrics{
 		Name: metrics.ID,
@@ -116,7 +114,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 
 	var metricsForRequest model.MetricsJSON
 
-	if metrics.ID != "PollCount" {
+	if metrics.MType == "gauge" {
 		value, err1 := h.metricsUpdate.GetFloatMetrics(dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
@@ -147,5 +145,5 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
-
+	h.metricsUpdate.MetricsPrint()
 }
