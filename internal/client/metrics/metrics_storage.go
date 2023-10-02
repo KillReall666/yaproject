@@ -14,7 +14,6 @@ type GaugeMetricsGetter struct {
 func NewGaugeMetricsStorage() *GaugeMetricsGetter {
 	return &GaugeMetricsGetter{
 		Gauge:        make(map[string]float64),
-		Counter:      make(map[string]int64),
 		GaugeStorage: make(map[string]string),
 	}
 }
