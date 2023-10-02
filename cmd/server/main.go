@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers/get"
 	"github.com/KillReall666/yaproject/internal/handlers/html"
 	"github.com/KillReall666/yaproject/internal/handlers/update"
-	"github.com/KillReall666/yaproject/internal/handlers/zip_data"
+	"github.com/KillReall666/yaproject/internal/handlers/zipdata"
 	logger2 "github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
 	"github.com/go-chi/chi/v5"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(myLog.MyLogger)
-	r.Use(zip_data.GzipMiddleware)
+	r.Use(zipdata.GzipMiddleware)
 
 	r.Post("/update/*", updateHandler.UpdateMetrics)
 	r.Post("/update/", updateHandler.UpdateJSONMetrics)
