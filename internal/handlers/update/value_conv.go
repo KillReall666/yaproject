@@ -7,7 +7,9 @@ import (
 
 func floatValueConv(value string) float64 {
 	var floatVal float64
+
 	floatVal, _ = strconv.ParseFloat(value, 64)
+
 	return floatVal
 }
 

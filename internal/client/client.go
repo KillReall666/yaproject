@@ -1,6 +1,7 @@
 package client
 
 import (
+
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
 	"log"
+
 	"net/http"
 	"time"
 
@@ -37,10 +39,12 @@ func (c *Client) Run() error {
 		case <-tickUpdater.C:
 			c.gms.UpdateMetrics()
 			c.gms.Counter["PollCount"]++
+
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
 			c.MetricsSender(&c.cfg)
+
 			tickSender.Reset(10 * time.Second)
 		}
 	}
@@ -127,6 +131,7 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 				fmt.Println(err)
 			}
 			defer resp.Body.Close()
+
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
 			resp, err := http.Post(url, "text/plain", nil)

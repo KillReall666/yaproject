@@ -3,6 +3,7 @@ package get
 import (
 	"bytes"
 	"encoding/json"
+
 	"fmt"
 	"net/http"
 
@@ -50,7 +51,9 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
+
 			w.WriteHeader(http.StatusOK)
+
 		}
 
 	} else if metricsType == "gauge" {
@@ -62,7 +65,9 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
+
 			w.WriteHeader(http.StatusOK)
+
 		}
 
 	} else {
@@ -128,3 +133,4 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+

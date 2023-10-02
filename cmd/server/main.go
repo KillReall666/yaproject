@@ -2,10 +2,15 @@ package main
 
 import (
 	"fmt"
+
+	"log"
+	"net/http"
+
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers/get"
 	"github.com/KillReall666/yaproject/internal/handlers/html"
 	"github.com/KillReall666/yaproject/internal/handlers/update"
+
 	"github.com/KillReall666/yaproject/internal/handlers/zip_data"
 	logger2 "github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/service"
@@ -31,6 +36,7 @@ func main() {
 	cfg := config.LoadServerConfig()
 
 	r := chi.NewRouter()
+
 	r.Use(myLog.MyLogger)
 	r.Use(zip_data.GzipMiddleware)
 
@@ -40,6 +46,7 @@ func main() {
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
+
 
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, r)

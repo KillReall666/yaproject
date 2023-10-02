@@ -12,6 +12,7 @@ import (
 type metricsUpdate interface {
 	SaveMetrics(request *model.Metrics) error
 	MetricsPrint()
+
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
 }
@@ -74,6 +75,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.metricsUpdate.SaveMetrics(dto)
 		}
 	}
+
 	//	h.metricsUpdate.MetricsPrint()
 }
 
@@ -145,5 +147,6 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Encoding", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
+  
 	//h.metricsUpdate.MetricsPrint()
 }

@@ -1,5 +1,6 @@
 package metrics
 
+
 import (
 	"math/rand"
 	"runtime"
@@ -14,7 +15,6 @@ type GaugeMetricsGetter struct {
 func NewGaugeMetricsStorage() *GaugeMetricsGetter {
 	return &GaugeMetricsGetter{
 		Gauge:        make(map[string]float64),
-		Counter:      make(map[string]int64),
 		GaugeStorage: make(map[string]string),
 	}
 }
@@ -50,6 +50,7 @@ func (gms *GaugeMetricsGetter) UpdateMetrics() map[string]string {
 	gms.Gauge["StackSys"] = float64(v.StackSys)
 	gms.Gauge["Sys"] = float64(v.Sys)
 	gms.Gauge["TotalAlloc"] = float64(v.TotalAlloc)
+
 	gms.Gauge["RandomValue"] = rand.Float64()
 
 	return gms.GaugeStorage

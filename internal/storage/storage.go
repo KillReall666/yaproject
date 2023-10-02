@@ -77,6 +77,7 @@ func (ms *MemStorage) Print() {
 		//	} else {
 		metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
 		//	}
+
 	}
 	fmt.Println("New received metrics: ", metrics)
 }
