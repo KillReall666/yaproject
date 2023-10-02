@@ -1,4 +1,4 @@
-package zip_data
+package zipdata
 
 import (
 	"compress/gzip"
