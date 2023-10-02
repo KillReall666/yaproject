@@ -91,7 +91,7 @@ func (c *Client) GaugeMetricsSender(cfg *config.RunConfig) {
 	if err != nil {
 		fmt.Println("ошибка при выполнении запроса:", err)
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 }
 
 func (c *Client) CounterMetricsSender(cfg *config.RunConfig) {
@@ -105,7 +105,7 @@ func (c *Client) CounterMetricsSender(cfg *config.RunConfig) {
 	if err != nil {
 		fmt.Println("ошибка при выполнении запроса:", err)
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 }
 
 
