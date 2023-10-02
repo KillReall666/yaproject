@@ -67,7 +67,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		resp.Body.Close()
+		defer resp.Body.Close()
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
@@ -98,7 +98,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		resp.Body.Close()
+		defer resp.Body.Close()
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
