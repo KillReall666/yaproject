@@ -129,6 +129,7 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 			defer resp.Body.Close()
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
+
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
 				fmt.Println("error sending request:", err)

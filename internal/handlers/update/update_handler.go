@@ -3,6 +3,7 @@ package update
 import (
 	"bytes"
 	"encoding/json"
+
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/handlers"

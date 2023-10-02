@@ -41,6 +41,7 @@ func main() {
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
 
+
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, r)
 	if err != nil {
