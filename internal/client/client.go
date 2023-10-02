@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
-	"log"
 	"net/http"
 	"time"
 
@@ -56,7 +55,6 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		data, err := json.Marshal(metric)
 		if err != nil {
 			return err
-			log.Println(err)
 		}
 
 		compressedData := Compress(data)
@@ -69,7 +67,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		defer resp.Body.Close()
+		resp.Body.Close()
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
@@ -85,7 +83,6 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		data, err := json.Marshal(metric)
 		if err != nil {
 			return err
-			log.Println(err)
 		}
 
 		compressedData := Compress(data)
@@ -101,7 +98,7 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		defer resp.Body.Close()
+		resp.Body.Close()
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
