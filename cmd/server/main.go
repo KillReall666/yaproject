@@ -21,7 +21,6 @@ func main() {
 	if err1 != nil {
 		panic("cannot initialize zap")
 	}
-
 	store := storage.NewMemStorage()
 	serv := service.NewService(store)
 
