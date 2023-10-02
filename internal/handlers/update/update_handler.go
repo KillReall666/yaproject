@@ -74,6 +74,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.metricsUpdate.SaveMetrics(dto)
 		}
 	}
+	//	h.metricsUpdate.MetricsPrint()
 }
 
 func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +94,6 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	if metrics.MType == "counter" {
 		dto := &model.Metrics{
 			Name:    metrics.ID,
@@ -142,8 +142,8 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
-	h.metricsUpdate.MetricsPrint()
+	//h.metricsUpdate.MetricsPrint()
 }

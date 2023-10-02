@@ -47,7 +47,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func (l Logger) PostLogger(h http.HandlerFunc) http.HandlerFunc {
+func (l Logger) MyLogger(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -70,33 +70,7 @@ func (l Logger) PostLogger(h http.HandlerFunc) http.HandlerFunc {
 			"duration:", duration,
 			"size:", respData.size,
 		)
+
 	}
-	return logFn
-}
-
-func (l Logger) GetLogger(h http.HandlerFunc) http.HandlerFunc {
-	logFn := func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		respData := &responseData{
-			status: 0,
-			size:   0,
-		}
-		lw := loggingResponseWriter{
-			ResponseWriter: w,
-			responseData:   respData,
-		}
-		h.ServeHTTP(&lw, r)
-
-		duration := time.Since(start)
-
-		l.Sugar.Infoln(
-			"uri:", r.RequestURI,
-			"method:", r.Method,
-			"status:", respData.status,
-			"duration:", duration,
-			"size:", respData.size,
-		)
-	}
-	return logFn
+	return http.HandlerFunc(logFn)
 }

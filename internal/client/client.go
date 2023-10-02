@@ -2,10 +2,12 @@ package client
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
+	"log"
 	"net/http"
 	"time"
 
@@ -54,16 +56,24 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		data, err := json.Marshal(metric)
 		if err != nil {
 			return err
+			log.Println(err)
 		}
-		resp, err := http.Post("http://"+cfg.Address+"/update/", "application/json", bytes.NewBuffer(data))
+
+		compressedData := Compress(data)
+
+		url := "http://" + cfg.Address + "/update/"
+		resp, err := http.NewRequest("POST", url, compressedData)
+		resp.Header.Set("Content-Encoding", "gzip")
+		client := http.Client{}
+		client.Do(resp)
 		if err != nil {
-			return err
+			fmt.Println("ошибка при выполнении запроса:", err)
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("HTTP request failed with status code: %d", resp.StatusCode)
-		}
+		//if resp.Response.StatusCode != http.StatusOK {
+		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
+		//	}
 	}
 
 	for key, val := range c.gms.Counter {
@@ -75,17 +85,37 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		data, err := json.Marshal(metric)
 		if err != nil {
 			return err
+			log.Println(err)
 		}
-		resp, err := http.Post("http://"+cfg.Address+"/update/", "application/json", bytes.NewBuffer(data))
+
+		compressedData := Compress(data)
+
+		headers := http.Header{}
+		headers.Set("Content-Encoding", "gzip")
+
+		url := "http://" + cfg.Address + "/update/"
+		resp, err := http.NewRequest("POST", url, compressedData)
+		resp.Header.Set("Content-Encoding", "gzip")
+		client := http.Client{}
+		client.Do(resp)
 		if err != nil {
-			return err
+			fmt.Println("ошибка при выполнении запроса:", err)
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("HTTP request failed with status code: %d", resp.StatusCode)
-		}
+
+		//if resp.Response.StatusCode != http.StatusOK {
+		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
+		//}
 	}
 	return nil
+}
+
+func Compress(data []byte) *bytes.Buffer {
+	var compressedData bytes.Buffer
+	gzipWriter := gzip.NewWriter(&compressedData)
+	gzipWriter.Write(data)
+	gzipWriter.Close()
+	return &compressedData
 }
 
 func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {

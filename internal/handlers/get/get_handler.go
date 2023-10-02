@@ -96,7 +96,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 
 	var metricsForRequest model.MetricsJSON
 
-	if metrics.ID != "PollCount" {
+	if metrics.MType == "gauge" {
 		value, err1 := h.metricsGet.GetFloatMetrics(dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
