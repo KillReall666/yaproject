@@ -39,16 +39,15 @@ func (c *Client) Run() error {
 			tickUpdater.Reset(2 * time.Second)
 
 		case <-tickSender.C:
-			c.MetricsSender(&c.cfg)
+			c.CounterMetricsSender(&c.cfg)
+			c.GaugeMetricsSender(&c.cfg)
 			tickSender.Reset(10 * time.Second)
 		}
 	}
 }
 
-func (c *Client) MetricsSender(cfg *config.RunConfig) error {
+func (c *Client) GaugeMetricsPrepare() *bytes.Buffer {
 	for key, value := range c.gms.Gauge {
-		switch c.gms.Gauge {
-		default:
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "gauge",
@@ -56,30 +55,17 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		}
 		data, err := json.Marshal(metric)
 		if err != nil {
-			return err
+			log.Println(err)
 		}
 
 		compressedData := Compress(data)
-
-		url := "http://" + cfg.Address + "/update/"
-		resp, err := http.NewRequest("POST", url, compressedData)
-		resp.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		client.Do(resp)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
-		}
-		defer resp.Body.Close()
-
-		//if resp.Response.StatusCode != http.StatusOK {
-		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
-		//	}
+		return compressedData
 	}
+	return nil
 }
 
-for key, val := range c.gms.Counter {
-	switch c.gms.Counter {
-	default:
+func (c *Client) CountMetricPrepare() *bytes.Buffer {
+	for key, val := range c.gms.Counter {
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "counter",
@@ -87,31 +73,42 @@ for key, val := range c.gms.Counter {
 		}
 		data, err := json.Marshal(metric)
 		if err != nil {
-			return err
+			log.Println(err)
 		}
 
 		compressedData := Compress(data)
-
-		headers := http.Header{}
-		headers.Set("Content-Encoding", "gzip")
-
-		url := "http://" + cfg.Address + "/update/"
-		resp, err := http.NewRequest("POST", url, compressedData)
-		resp.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		client.Do(resp)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
-		}
-		defer resp.Body.Close()
-
-		//if resp.Response.StatusCode != http.StatusOK {
-		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
-		//}
+		return compressedData
 	}
-}
 	return nil
 }
+
+func (c *Client) GaugeMetricsSender(cfg *config.RunConfig) {
+	url := "http://" + cfg.Address + "/update/"
+	resp, err := http.NewRequest("POST", url, c.GaugeMetricsPrepare())
+	resp.Header.Set("Content-Encoding", "gzip")
+	client := http.Client{}
+	client.Do(resp)
+	if err != nil {
+		fmt.Println("ошибка при выполнении запроса:", err)
+	}
+	defer resp.Body.Close()
+}
+
+func (c *Client) CounterMetricsSender(cfg *config.RunConfig) {
+	headers := http.Header{}
+	headers.Set("Content-Encoding", "gzip")
+	url := "http://" + cfg.Address + "/update/"
+	resp, err := http.NewRequest("POST", url, c.CountMetricPrepare())
+	resp.Header.Set("Content-Encoding", "gzip")
+	client := http.Client{}
+	client.Do(resp)
+	if err != nil {
+		fmt.Println("ошибка при выполнении запроса:", err)
+	}
+	defer resp.Body.Close()
+}
+
+
 
 func Compress(data []byte) *bytes.Buffer {
 	var compressedData bytes.Buffer
