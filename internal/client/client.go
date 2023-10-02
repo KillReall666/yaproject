@@ -47,6 +47,8 @@ func (c *Client) Run() error {
 
 func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 	for key, value := range c.gms.Gauge {
+		switch c.gms.Gauge {
+		default:
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "gauge",
@@ -67,18 +69,17 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		defer func(Body io.ReadCloser) {
-			err1 := Body.Close()
-			if err1 != nil {
-			}
-		}(resp.Body)
+		defer resp.Body().Close
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
 		//	}
 	}
+}
 
-	for key, val := range c.gms.Counter {
+for key, val := range c.gms.Counter {
+	switch c.gms.Counter {
+	default:
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "counter",
@@ -102,16 +103,13 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			fmt.Println("ошибка при выполнении запроса:", err)
 		}
-		defer func(Body io.ReadCloser) {
-			err1 := Body.Close()
-			if err1 != nil {
-			}
-		}(resp.Body)
+		defer resp.Body().Close
 
 		//if resp.Response.StatusCode != http.StatusOK {
 		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
 		//}
 	}
+}
 	return nil
 }
 
