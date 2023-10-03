@@ -84,28 +84,29 @@ func (c *Client) CountMetricPrepare() *bytes.Buffer {
 
 func (c *Client) GaugeMetricsSender(cfg *config.RunConfig) {
 	url := "http://" + cfg.Address + "/update/"
-	resp, err := http.NewRequest("POST", url, c.GaugeMetricsPrepare())
-	resp.Header.Set("Content-Encoding", "gzip")
+	req, err := http.NewRequest("POST", url, c.GaugeMetricsPrepare())
+	req.Header.Set("Content-Encoding", "gzip")
 	client := http.Client{}
-	client.Do(resp)
+	resp, _ := client.Do(req)
 	if err != nil {
 		fmt.Println("ошибка при выполнении запроса:", err)
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
+
 }
 
 func (c *Client) CounterMetricsSender(cfg *config.RunConfig) {
 	headers := http.Header{}
 	headers.Set("Content-Encoding", "gzip")
 	url := "http://" + cfg.Address + "/update/"
-	resp, err := http.NewRequest("POST", url, c.CountMetricPrepare())
-	resp.Header.Set("Content-Encoding", "gzip")
+	req, err := http.NewRequest("POST", url, c.CountMetricPrepare())
+	req.Header.Set("Content-Encoding", "gzip")
 	client := http.Client{}
-	client.Do(resp)
+	resp, _ := client.Do(req)
 	if err != nil {
 		fmt.Println("ошибка при выполнении запроса:", err)
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
 }
 
 
