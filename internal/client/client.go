@@ -9,7 +9,6 @@ import (
 	"github.com/KillReall666/yaproject/internal/model"
 	"net/http"
 	"time"
-	"log"
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 )
