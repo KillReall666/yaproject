@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/KillReall666/yaproject/internal/fileutil"
 	"log"
 	"net/http"
 
@@ -35,12 +36,17 @@ func main() {
 	r.Use(myLog.MyLogger)
 	r.Use(zipdata.GzipMiddleware)
 
+	fileUtilCfg := config.LoadFileIoConf()
+	f := fileutil.NewFileIo(store, fileUtilCfg)
+
 	r.Post("/update/*", updateHandler.UpdateMetrics)
 	r.Post("/update/", updateHandler.UpdateJSONMetrics)
 	r.Post("/value/", getHandler.GetMetricsJSON)
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
+
+	go f.Run()
 
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, r)

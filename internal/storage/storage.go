@@ -72,11 +72,23 @@ func (ms *MemStorage) GetAllMetrics() string {
 func (ms *MemStorage) Print() {
 	var metrics string
 	for key, value := range ms.storage {
-		//if key != "PollCount" {
-		metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
-		//	} else {
-		metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
-		//	}
+		if key != "PollCount" {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+		} else {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
+		}
 	}
 	fmt.Println("New received metrics: ", metrics)
+}
+
+func (ms *MemStorage) MetricsReturner() string {
+	var metrics string
+	for key, value := range ms.storage {
+		if key != "PollCount" {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+		} else {
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
+		}
+	}
+	return metrics
 }
