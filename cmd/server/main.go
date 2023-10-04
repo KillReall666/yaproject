@@ -33,6 +33,7 @@ func main() {
 	cfg := config.LoadServerConfig()
 
 	r := chi.NewRouter()
+
 	r.Use(myLog.MyLogger)
 	r.Use(zipdata.GzipMiddleware)
 

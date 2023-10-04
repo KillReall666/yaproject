@@ -71,6 +71,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
 func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
