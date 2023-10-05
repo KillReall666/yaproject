@@ -3,6 +3,7 @@ package update
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -112,11 +113,11 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		Name: metrics.ID,
 	}
 
-	var metricsForRequest model.MetricsJSON
+	var metricsForGaugeRequest, metricsForCounterRequest model.MetricsJSON
 
 	if metrics.MType == "gauge" {
 		value, err1 := h.metricsUpdate.GetFloatMetrics(dto)
-		metricsForRequest = model.MetricsJSON{
+		metricsForGaugeRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
@@ -124,19 +125,9 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		}
-	} else {
-		value, err2 := h.metricsUpdate.GetCountMetrics(dto)
-		metricsForRequest = model.MetricsJSON{
-			ID:    metrics.ID,
-			MType: "counter",
-			Delta: handlers.Int64Ptr(value),
-		}
-		if err2 != nil {
-			http.Error(w, err2.Error(), http.StatusNotFound)
-		}
 	}
 
-	jsonData, err := json.Marshal(metricsForRequest)
+	jsonGaugeData, err := json.Marshal(metricsForGaugeRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -144,6 +135,34 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Accept-Encoding", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
-	//h.metricsUpdate.MetricsPrint()
+	_, err = w.Write(jsonGaugeData)
+	if err != nil {
+		log.Println(err)
+	}
+
+	if metrics.MType == "counter" {
+		value, err2 := h.metricsUpdate.GetCountMetrics(dto)
+		metricsForCounterRequest = model.MetricsJSON{
+			ID:    metrics.ID,
+			MType: "counter",
+			Delta: handlers.Int64Ptr(value),
+		}
+		if err2 != nil {
+			http.Error(w, err2.Error(), http.StatusNotFound)
+		}
+
+		jsonCounterData, err := json.Marshal(metricsForCounterRequest)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Accept-Encoding", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(jsonCounterData)
+		if err != nil {
+			log.Println(err)
+		}
+		//h.metricsUpdate.MetricsPrint()
+	}
 }

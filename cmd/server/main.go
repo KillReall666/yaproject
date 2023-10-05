@@ -18,6 +18,9 @@ import (
 )
 
 func main() {
+	cfg := config.LoadServerConfig()
+	fileWriterCfg := config.LoadFileIoConf()
+
 	myLog, err1 := logger2.InitLogger()
 	if err1 != nil {
 		panic("cannot initialize zap")
@@ -30,14 +33,12 @@ func main() {
 	updateHandler := update.NewUpdateHandler(serv)
 	htmlHandler := html.NewHTMLHandler(serv)
 
-	cfg := config.LoadServerConfig()
+	fileWriter := fileutil.NewFileIo(store, fileWriterCfg)
+	fileWriter.Run()
 
 	r := chi.NewRouter()
 	r.Use(myLog.MyLogger)
 	r.Use(zipdata.GzipMiddleware)
-
-	fileUtilCfg := config.LoadFileIoConf()
-	f := fileutil.NewFileIo(store, fileUtilCfg)
 
 	r.Post("/update/*", updateHandler.UpdateMetrics)
 	r.Post("/update/", updateHandler.UpdateJSONMetrics)
@@ -45,8 +46,6 @@ func main() {
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
-
-	go f.Run()
 
 	log.Printf("Starting http server to serve metricss at port%s ", cfg.Address)
 	err := http.ListenAndServe(cfg.Address, r)

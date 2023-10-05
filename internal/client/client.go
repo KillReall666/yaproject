@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
+	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -27,8 +29,8 @@ func NewClient(cfg config.RunConfig, gms *metrics.GaugeMetricsGetter) *Client {
 }
 
 func (c *Client) Run() error {
-	tickUpdater := time.NewTicker(2 * time.Second)
-	tickSender := time.NewTicker(10 * time.Second)
+	tickUpdater := time.NewTicker(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
+	tickSender := time.NewTicker(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
 	defer tickUpdater.Stop()
 	defer tickSender.Stop()
 	for {
@@ -36,85 +38,26 @@ func (c *Client) Run() error {
 		case <-tickUpdater.C:
 			c.gms.UpdateMetrics()
 			c.gms.Counter["PollCount"]++
-			tickUpdater.Reset(2 * time.Second)
+			tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
 
 		case <-tickSender.C:
 			c.MetricsSender(&c.cfg)
-			tickSender.Reset(10 * time.Second)
+			tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
 		}
 	}
-}
-
-func (c *Client) MetricsSender(cfg *config.RunConfig) error {
-	for key, value := range c.gms.Gauge {
-		metric := model.MetricsJSON{
-			ID:    key,
-			MType: "gauge",
-			Value: handlers.Float64Ptr(value),
-		}
-		data, err1 := json.Marshal(metric)
-		if err1 != nil {
-			fmt.Println("ошибка при marshal gauge:", err1)
-		}
-		compressedData := Compress(data)
-
-		url := "http://" + cfg.Address + "/update/"
-		req, err2 := http.NewRequest("POST", url, compressedData)
-		if err2 != nil {
-			fmt.Println("ошибка при запросе gauge", err2)
-		}
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, err3 := client.Do(req)
-		if err3 != nil {
-			fmt.Println("ошибка при получении ответа gauge:", err3)
-			return err3
-		}
-		defer resp.Body.Close()
-	}
-
-	for key, val := range c.gms.Counter {
-		metric := model.MetricsJSON{
-			ID:    key,
-			MType: "counter",
-			Delta: handlers.Int64Ptr(val),
-		}
-		data, err4 := json.Marshal(metric)
-		if err4 != nil {
-			fmt.Println("ошибка при marshal counter", err4)
-		}
-
-		compressedData := Compress(data)
-
-		headers := http.Header{}
-		headers.Set("Content-Encoding", "gzip")
-
-		url := "http://" + cfg.Address + "/update/"
-		req, err5 := http.NewRequest("POST", url, compressedData)
-		req.Close = true
-		if err5 != nil {
-			fmt.Println("ошибка при выполнении запроса counter", err5)
-		}
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, err6 := client.Do(req)
-
-		if err6 != nil {
-			fmt.Println("ошибка при получении ответа counter:", err6)
-			return err6
-		}
-		defer resp.Body.Close()
-
-	}
-
-	return nil
 }
 
 func Compress(data []byte) *bytes.Buffer {
 	var compressedData bytes.Buffer
 	gzipWriter := gzip.NewWriter(&compressedData)
-	gzipWriter.Write(data)
-	gzipWriter.Close()
+	_, err := gzipWriter.Write(data)
+	if err != nil {
+		log.Println(err)
+	}
+	err = gzipWriter.Close()
+	if err != nil {
+		log.Println(err)
+	}
 	return &compressedData
 }
 
@@ -139,70 +82,80 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 	}
 }
 
-/*
-func (c *Client) GaugeMetricsPrepare() *bytes.Buffer {
+func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 	for key, value := range c.gms.Gauge {
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
 		}
-		data, err := json.Marshal(metric)
-		if err != nil {
-			log.Println(err)
+
+		data, err1 := json.Marshal(metric)
+		if err1 != nil {
+			log.Println("ошибка при marshal gauge:", err1)
 		}
 
 		compressedData := Compress(data)
-		return compressedData
-	}
-	return nil
-}
 
-func (c *Client) CountMetricPrepare() *bytes.Buffer {
+		url := "http://" + cfg.Address + "/update/"
+		req, err2 := http.NewRequest("POST", url, compressedData)
+		if err2 != nil {
+			log.Println("ошибка при запросе gauge", err2)
+		}
+
+		req.Header.Set("Content-Encoding", "gzip")
+
+		client := http.Client{}
+		resp, err3 := client.Do(req)
+		if err3 != nil {
+			log.Println("ошибка при получении ответа gauge:", err3)
+			return err3
+		}
+		defer resp.Body.Close()
+
+		_, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		//log.Println("Gauge: ", string(res))
+	}
+
 	for key, val := range c.gms.Counter {
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "counter",
 			Delta: handlers.Int64Ptr(val),
 		}
-		data, err := json.Marshal(metric)
-		if err != nil {
-			log.Println(err)
+
+		data, err4 := json.Marshal(metric)
+		if err4 != nil {
+			log.Println("ошибка при marshal counter", err4)
 		}
 
 		compressedData := Compress(data)
-		return compressedData
+
+		url := "http://" + cfg.Address + "/update/"
+		req, err5 := http.NewRequest("POST", url, compressedData)
+		if err5 != nil {
+			log.Println("ошибка при выполнении запроса counter", err5)
+		}
+
+		req.Header.Set("Content-Encoding", "gzip")
+
+		client := http.Client{}
+		resp, err6 := client.Do(req)
+
+		if err6 != nil {
+			log.Println("ошибка при получении ответа counter:", err6)
+		}
+		defer resp.Body.Close()
+
+		_, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		//log.Println("Counter: ", string(res))
 	}
+
 	return nil
 }
-
-func (c *Client) GaugeMetricsSender(cfg *config.RunConfig) {
-	for {
-		url := "http://" + cfg.Address + "/update/"
-		req, err := http.NewRequest("POST", url, c.GaugeMetricsPrepare())
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, _ := client.Do(req)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
-		}
-		resp.Body.Close()
-	}
-}
-
-func (c *Client) CounterMetricsSender(cfg *config.RunConfig) {
-	for {
-		headers := http.Header{}
-		headers.Set("Content-Encoding", "gzip")
-		url := "http://" + cfg.Address + "/update/"
-		req, err := http.NewRequest("POST", url, c.CountMetricPrepare())
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, _ := client.Do(req)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
-		}
-		resp.Body.Close()
-	}
-}
-*/

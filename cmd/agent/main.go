@@ -13,6 +13,7 @@ func main() {
 	gms := metrics2.NewGaugeMetricsStorage()
 	cli := agent.NewClient(cfg, gms)
 
+
 	err := cli.Run()
 	if err != nil {
 		log.Fatalf("client died on error: %v", err)
