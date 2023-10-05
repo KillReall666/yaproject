@@ -51,6 +51,7 @@ func ClearFile(filePath string) error {
 	return nil
 }
 
+
 func (f FileIoStruct) Run() {
 	if f.cfg.Path == "" {
 		return
@@ -68,7 +69,6 @@ func (f FileIoStruct) Run() {
 	} else if f.cfg.Interval == 0 {
 		timeInterval = 10
 	}
-
 
 	go func() {
 		defer runtime.Goexit()

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/fileutil"
 	"log"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/fileutil"
 	"github.com/KillReall666/yaproject/internal/handlers/get"
 	"github.com/KillReall666/yaproject/internal/handlers/html"
 	"github.com/KillReall666/yaproject/internal/handlers/update"
@@ -20,6 +20,7 @@ import (
 func main() {
 	cfg := config.LoadServerConfig()
 	fileWriterCfg := config.LoadFileIoConf()
+
 
 	myLog, err1 := logger2.InitLogger()
 	if err1 != nil {

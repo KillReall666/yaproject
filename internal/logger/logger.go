@@ -66,8 +66,8 @@ func (l Logger) MyLogger(h http.Handler) http.Handler {
 		l.Sugar.Infoln(
 			"uri:", r.RequestURI,
 			"method:", r.Method,
-			"status:", respData.status,
 			"duration:", duration,
+			"status:", respData.status,
 			"size:", respData.size,
 		)
 
