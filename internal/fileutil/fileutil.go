@@ -69,20 +69,17 @@ func (f FileIoStruct) Run() {
 	} else if f.cfg.Interval == 0 {
 		timeInterval = 10
 	}
-
-	go func() {
+		go func() {
 		defer runtime.Goexit()
 		ticker := time.NewTicker(time.Duration(timeInterval) * time.Second)
 		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
+		for range ticker.C{
 				err := f.SaveMetricsToFile(f.cfg.Path)
 				if err != nil {
 					log.Println("ошибка при сохранении текущих значений метрик:", err)
 				}
 				ticker.Reset(time.Duration(timeInterval) * time.Second)
-			}
+
 		}
 	}()
 }
