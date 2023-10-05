@@ -51,27 +51,36 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
 		}
-		data, err := json.Marshal(metric)
-		if err != nil {
-			return err
+
+		data, err1 := json.Marshal(metric)
+		if err1 != nil {
+			log.Println("ошибка при marshal gauge:", err1)
 		}
 
 		compressedData := Compress(data)
 
 		url := "http://" + cfg.Address + "/update/"
-		req, err := http.NewRequest("POST", url, compressedData)
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, _ := client.Do(req)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
+		req, err2 := http.NewRequest("POST", url, compressedData)
+		if err2 != nil {
+			log.Println("ошибка при запросе gauge", err2)
 		}
-		resp.Body.Close()
-	}
 
-	//if resp.Response.StatusCode != http.StatusOK {
-	//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
-	//	}
+		req.Header.Set("Content-Encoding", "gzip")
+
+		client := http.Client{}
+		resp, err3 := client.Do(req)
+		if err3 != nil {
+			log.Println("ошибка при получении ответа gauge:", err3)
+			return err3
+		}
+		defer resp.Body.Close()
+
+		_, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		//log.Println("Gauge: ", string(res))
+	}
 
 	for key, val := range c.gms.Counter {
 		metric := model.MetricsJSON{
@@ -79,29 +88,35 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 			MType: "counter",
 			Delta: handlers.Int64Ptr(val),
 		}
-		data, err := json.Marshal(metric)
-		if err != nil {
-			return err
+
+		data, err4 := json.Marshal(metric)
+		if err4 != nil {
+			log.Println("ошибка при marshal counter", err4)
 		}
 
 		compressedData := Compress(data)
 
-		headers := http.Header{}
-		headers.Set("Content-Encoding", "gzip")
-
 		url := "http://" + cfg.Address + "/update/"
-		req, err := http.NewRequest("POST", url, compressedData)
-		req.Header.Set("Content-Encoding", "gzip")
-		client := http.Client{}
-		resp, _ := client.Do(req)
-		if err != nil {
-			fmt.Println("ошибка при выполнении запроса:", err)
+		req, err5 := http.NewRequest("POST", url, compressedData)
+		if err5 != nil {
+			log.Println("ошибка при выполнении запроса counter", err5)
 		}
-		resp.Body.Close()
 
-		//if resp.Response.StatusCode != http.StatusOK {
-		//	return fmt.Errorf("HTTP request failed with status code: %d", resp.Response.StatusCode)
-		//}
+		req.Header.Set("Content-Encoding", "gzip")
+
+		client := http.Client{}
+		resp, err6 := client.Do(req)
+
+		if err6 != nil {
+			log.Println("ошибка при получении ответа counter:", err6)
+		}
+		defer resp.Body.Close()
+
+		_, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		//log.Println("Counter: ", string(res))
 	}
 
 	return nil
