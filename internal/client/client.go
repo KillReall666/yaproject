@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 	"log"
+	"io"
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 )
