@@ -82,11 +82,11 @@ func (ms *MemStorage) Print() {
 	log.Println("New received metrics: ", metrics)
 }
 
-func (m *MemStorage) ToJSON() ([]byte, error) {
+func (ms *MemStorage) ToJSON() ([]byte, error) {
 	return json.Marshal(m.storage)
 }
 
-func (m *MemStorage) UnmarshalJSONData(data []byte) error {
+func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
 	storageData := make(map[string]json.RawMessage)
 
 	err := json.Unmarshal(data, &storageData)
