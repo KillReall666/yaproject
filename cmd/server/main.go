@@ -21,7 +21,6 @@ func main() {
 	cfg := config.LoadServerConfig()
 	fileWriterCfg := config.LoadFileIoConf()
 
-
 	myLog, err1 := logger2.InitLogger()
 	if err1 != nil {
 		panic("cannot initialize zap")
@@ -29,8 +28,6 @@ func main() {
 
 	store := storage.NewMemStorage()
 	serv := service.NewService(store)
-
-
 
 	getHandler := get.NewGetHandler(serv)
 	updateHandler := update.NewUpdateHandler(serv)
