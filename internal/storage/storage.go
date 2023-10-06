@@ -83,7 +83,7 @@ func (ms *MemStorage) Print() {
 }
 
 func (ms *MemStorage) ToJSON() ([]byte, error) {
-	return json.Marshal(m.storage)
+	return json.Marshal(ms.storage)
 }
 
 func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
@@ -101,7 +101,7 @@ func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
 			return err
 		}
 
-		m.storage[key] = &metricsData
+		ms.storage[key] = &metricsData
 	}
 	return nil
 }
