@@ -30,6 +30,8 @@ func main() {
 	store := storage.NewMemStorage()
 	serv := service.NewService(store)
 
+
+
 	getHandler := get.NewGetHandler(serv)
 	updateHandler := update.NewUpdateHandler(serv)
 	htmlHandler := html.NewHTMLHandler(serv)

@@ -1,14 +1,15 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/KillReall666/yaproject/internal/handlers/get"
 	update2 "github.com/KillReall666/yaproject/internal/handlers/update"
 	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestGetHandler(t *testing.T) {

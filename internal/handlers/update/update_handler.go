@@ -12,7 +12,6 @@ import (
 
 type metricsUpdate interface {
 	SaveMetrics(request *model.Metrics) error
-	MetricsPrint()
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
 }
@@ -75,7 +74,6 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.metricsUpdate.SaveMetrics(dto)
 		}
 	}
-	//	h.metricsUpdate.MetricsPrint()
 }
 
 func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
@@ -113,11 +111,11 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		Name: metrics.ID,
 	}
 
-	var metricsForGaugeRequest, metricsForCounterRequest model.MetricsJSON
+	var metricsForRequest model.MetricsJSON
 
 	if metrics.MType == "gauge" {
 		value, err1 := h.metricsUpdate.GetFloatMetrics(dto)
-		metricsForGaugeRequest = model.MetricsJSON{
+		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
@@ -125,24 +123,9 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		}
-	}
-
-	jsonGaugeData, err := json.Marshal(metricsForGaugeRequest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Accept-Encoding", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(jsonGaugeData)
-	if err != nil {
-		log.Println(err)
-	}
-
-	if metrics.MType == "counter" {
+	} else {
 		value, err2 := h.metricsUpdate.GetCountMetrics(dto)
-		metricsForCounterRequest = model.MetricsJSON{
+		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
 			Delta: handlers.Int64Ptr(value),
@@ -150,19 +133,18 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 		}
+	}
 
-		jsonCounterData, err := json.Marshal(metricsForCounterRequest)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	jsonData, err := json.Marshal(metricsForRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-		w.Header().Set("Accept-Encoding", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write(jsonCounterData)
-		if err != nil {
-			log.Println(err)
-		}
-		//h.metricsUpdate.MetricsPrint()
+	w.Header().Set("Accept-Encoding", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		log.Println(err)
 	}
 }

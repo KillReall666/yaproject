@@ -2,19 +2,19 @@ package config
 
 import (
 	"flag"
-	"github.com/caarlos0/env"
 	"log"
+
+	"github.com/caarlos0/env"
 )
 
 type RunFileIo struct {
 	Interval int    `env:"STORE_INTERVAL"`
 	Path     string `env:"FILE_STORAGE_PATH"`
 	Restore  bool   `env:"RESTORE"`
-	//ShutdownChan chan os.Signal
 }
 
 const (
-	defaultInterval = 300
+	defaultInterval = 15
 	defaultPath     = "./metrics-db.json"
 	defaultRestore  = true
 )
@@ -30,9 +30,6 @@ func LoadFileIoConf() RunFileIo {
 	if err != nil {
 		log.Println(err)
 	}
-
-	//	cfg.ShutdownChan = make(chan os.Signal, 1)
-	//	signal.Notify(cfg.ShutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
 	return cfg
 }

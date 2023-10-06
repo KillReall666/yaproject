@@ -48,9 +48,10 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		value, err1 := h.metricsGet.GetCountMetrics(dto)
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
+			return
 		} else {
 			fmt.Fprintln(w, value)
-			w.WriteHeader(http.StatusOK)
+			return
 		}
 
 	} else if metricsType == "gauge" {
@@ -60,9 +61,10 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		value, err2 := h.metricsGet.GetFloatMetrics(dto)
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 		} else {
 			fmt.Fprintln(w, value)
-			w.WriteHeader(http.StatusOK)
+			return
 		}
 
 	} else {
@@ -105,6 +107,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		}
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
+			return
 		}
 	} else {
 		value, err2 := h.metricsGet.GetCountMetrics(dto)
@@ -115,6 +118,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		}
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
+			return
 		}
 	}
 

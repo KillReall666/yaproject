@@ -2,16 +2,15 @@ package client
 
 import (
 	"bytes"
+	"log"
+	"io"
+	"time"
 	"compress/gzip"
+	"net/http"
 	"encoding/json"
-	"fmt"
+
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
-	"io"
-	"log"
-	"net/http"
-	"time"
-
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 )
@@ -67,14 +66,14 @@ func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
 			url := "http://" + cfg.Address + "/update/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 			defer resp.Body.Close()
 		} else {
 			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
 			resp, err := http.Post(url, "text/plain", nil)
 			if err != nil {
-				fmt.Println("error sending request:", err)
+				log.Println("error sending request:", err)
 				continue
 			}
 			defer resp.Body.Close()
@@ -89,7 +88,6 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
 		}
-
 		data, err1 := json.Marshal(metric)
 		if err1 != nil {
 			log.Println("ошибка при marshal gauge:", err1)
@@ -117,7 +115,6 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 		if err != nil {
 			log.Println(err)
 		}
-		//log.Println("Gauge: ", string(res))
 	}
 
 	for key, val := range c.gms.Counter {
@@ -149,12 +146,10 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 			log.Println("ошибка при получении ответа counter:", err6)
 		}
 		defer resp.Body.Close()
-
 		_, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Println(err)
 		}
-		//log.Println("Counter: ", string(res))
 	}
 
 	return nil

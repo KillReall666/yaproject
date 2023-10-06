@@ -1,13 +1,15 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
+	"log"
 )
 
 type Metrics struct {
-	Count int64
-	Gauge float64
+	Count int64   `json:"count"`
+	Gauge float64 `json:"gauge"`
 }
 type MemStorage struct {
 	storage map[string]*Metrics
@@ -66,7 +68,6 @@ func (ms *MemStorage) GetAllMetrics() string {
 	}
 	htmlPage += ""
 	return htmlPage
-
 }
 
 func (ms *MemStorage) Print() {
@@ -78,17 +79,29 @@ func (ms *MemStorage) Print() {
 			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
 		}
 	}
-	fmt.Println("New received metrics: ", metrics)
+	log.Println("New received metrics: ", metrics)
 }
 
-func (ms *MemStorage) MetricsReturner() string {
-	var metrics string
-	for key, value := range ms.storage {
-		if key != "PollCount" {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
-		} else {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
-		}
+func (m *MemStorage) ToJSON() ([]byte, error) {
+	return json.Marshal(m.storage)
+}
+
+func (m *MemStorage) UnmarshalJSONData(data []byte) error {
+	storageData := make(map[string]json.RawMessage)
+
+	err := json.Unmarshal(data, &storageData)
+	if err != nil {
+		return err
 	}
-	return metrics
+
+	for key, value := range storageData {
+		metricsData := Metrics{}
+		err := json.Unmarshal(value, &metricsData)
+		if err != nil {
+			return err
+		}
+
+		m.storage[key] = &metricsData
+	}
+	return nil
 }
