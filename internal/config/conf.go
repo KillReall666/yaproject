@@ -13,10 +13,6 @@ type RunConfig struct {
 	DefaultReportInterval int    `env:"POLL_INTERVAL"`
 }
 
-func (r RunConfig) ReturnReportInterval () *int {
-	return &r.DefaultReportInterval
-}
-
 const (
 	defaultServer         = ":8080"
 	defaultPollInterval   = 2

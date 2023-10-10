@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Logger struct {
@@ -23,7 +24,21 @@ type loggingResponseWriter struct {
 }
 
 func InitLogger() (*Logger, error) {
-	mylogger, err := zap.NewDevelopment()
+	config := zap.Config{
+		Encoding: "console",
+		Level:    zap.NewAtomicLevelAt(zap.DebugLevel),
+		EncoderConfig: zapcore.EncoderConfig{
+			MessageKey:  "message",
+			LevelKey:    "level",
+			TimeKey:     "timestamp",
+			EncodeTime:  zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05"),
+			EncodeLevel: zapcore.LowercaseLevelEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+
+	mylogger, err := config.Build()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +63,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func (l Logger) MyLogger(h http.Handler) http.Handler {
+func (l *Logger) MyLogger(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -74,4 +89,8 @@ func (l Logger) MyLogger(h http.Handler) http.Handler {
 
 	}
 	return http.HandlerFunc(logFn)
+}
+
+func (l *Logger) LogInfo(args ...interface{}) {
+	l.Sugar.Info(args)
 }

@@ -3,7 +3,6 @@ package update
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -16,8 +15,13 @@ type metricsUpdate interface {
 	GetFloatMetrics(response *model.Metrics) (float64, error)
 }
 
+type logger interface {
+	LogInfo(args ...interface{})
+}
+
 type Handler struct {
 	metricsUpdate metricsUpdate
+	logger        logger
 }
 
 func NewUpdateHandler(s metricsUpdate) *Handler {
@@ -145,6 +149,6 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsonData)
 	if err != nil {
-		log.Println(err)
+		h.logger.LogInfo(err)
 	}
 }

@@ -1,23 +1,23 @@
 package service
 
 import (
+	"github.com/KillReall666/yaproject/internal/fileutil"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/model"
 	"github.com/KillReall666/yaproject/internal/storage"
-	"github.com/jmoiron/sqlx"
 )
 
 type Service struct {
 	repository *storage.MemStorage
 	log        *logger.Logger
-	db         *sqlx.DB
+	fileIo     *fileutil.FileIoStruct
 }
 
-func NewService(repo *storage.MemStorage, log *logger.Logger, connect *sqlx.DB) *Service {
+func NewService(repo *storage.MemStorage, log *logger.Logger, fileIo *fileutil.FileIoStruct) *Service {
 	return &Service{
 		repository: repo,
 		log:        log,
-		db:         connect,
+		fileIo:     fileIo,
 	}
 }
 

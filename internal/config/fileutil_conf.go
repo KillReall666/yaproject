@@ -14,7 +14,7 @@ type RunFileIo struct {
 }
 
 const (
-	defaultInterval = 15
+	defaultInterval = 300
 	defaultPath     = "./metrics-db.json"
 	defaultRestore  = true
 )

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/repo"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -56,9 +58,10 @@ func TestGetHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
-
+			db := repo.SetupDB()
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			serv := service.NewService(store, log, db)
 			get := get.NewGetHandler(serv)
 
 			get.GetMetrics(w, r)
@@ -126,8 +129,10 @@ func TestPostHandler(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
+			db := repo.SetupDB()
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			serv := service.NewService(store, log, db)
 			update := update2.NewUpdateHandler(serv)
 
 			update.UpdateMetrics(w, r)
