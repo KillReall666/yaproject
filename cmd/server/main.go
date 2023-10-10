@@ -21,6 +21,7 @@ func main() {
 	fileWriterCfg := config.LoadFileIoConf()
 
 	log, err1 := logger.InitLogger()
+
 	if err1 != nil {
 		panic("cannot initialize zap")
 	}
