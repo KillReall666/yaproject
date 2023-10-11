@@ -21,6 +21,8 @@ func NewHTMLHandler(s metricsHTML) *Handler {
 
 func (h *Handler) HTMLOutput(w http.ResponseWriter, r *http.Request) {
 	htmlPage := h.metricsHTML.PrintForHTML()
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Encoding", "gzip")
 	fmt.Fprint(w, htmlPage)
 
 }

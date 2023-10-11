@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 )
 
 type Metrics struct {
-	Count int64
-	Gauge float64
+	Count int64   `json:"count"`
+	Gauge float64 `json:"gauge"`
 }
 type MemStorage struct {
 	storage map[string]*Metrics
@@ -66,7 +67,6 @@ func (ms *MemStorage) GetAllMetrics() string {
 	}
 	htmlPage += ""
 	return htmlPage
-
 }
 
 func (ms *MemStorage) Print() {
@@ -75,8 +75,32 @@ func (ms *MemStorage) Print() {
 		if key != "PollCount" {
 			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
 		} else {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
+			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
 		}
 	}
 	fmt.Println("New received metrics: ", metrics)
+}
+
+func (ms *MemStorage) ToJSON() ([]byte, error) {
+	return json.Marshal(ms.storage)
+}
+
+func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
+	storageData := make(map[string]json.RawMessage)
+
+	err := json.Unmarshal(data, &storageData)
+	if err != nil {
+		return err
+	}
+
+	for key, value := range storageData {
+		metricsData := Metrics{}
+		err := json.Unmarshal(value, &metricsData)
+		if err != nil {
+			return err
+		}
+
+		ms.storage[key] = &metricsData
+	}
+	return nil
 }

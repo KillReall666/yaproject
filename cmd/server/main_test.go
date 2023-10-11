@@ -1,14 +1,18 @@
 package main
 
 import (
+	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/fileutil"
+	"github.com/KillReall666/yaproject/internal/logger"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/KillReall666/yaproject/internal/handlers/get"
 	update2 "github.com/KillReall666/yaproject/internal/handlers/update"
 	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestGetHandler(t *testing.T) {
@@ -56,8 +60,11 @@ func TestGetHandler(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
+			cfg := config.RunFileIo{}
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			fileio := fileutil.NewFileIo(cfg, store, log)
+			serv := service.NewService(store, log, fileio)
 			get := get.NewGetHandler(serv)
 
 			get.GetMetrics(w, r)
@@ -85,7 +92,7 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 1",
 			method: http.MethodPost,
-			url:    "/html/gauge/Alloc",
+			url:    "/update/gauge/Alloc",
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -94,7 +101,7 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 2",
 			method: http.MethodPost,
-			url:    "/html/counter",
+			url:    "/update/counter",
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -103,7 +110,7 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "too short url 3",
 			method: http.MethodPost,
-			url:    "/html",
+			url:    "/update",
 			response: response{
 				requestCode: http.StatusNotFound,
 				contentType: "text/plain",
@@ -112,7 +119,7 @@ func TestPostHandler(t *testing.T) {
 		{
 			name:   "unknown type of metric", // can crash if in PostHandler called h.service.MetricsPrint()
 			method: http.MethodPost,
-			url:    "/html/unknown_type/Alloc/",
+			url:    "/update/unknown_type/Alloc/",
 			response: response{
 				requestCode: http.StatusBadRequest,
 				contentType: "text/plain",
@@ -124,9 +131,11 @@ func TestPostHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
-
+			cfg := config.RunFileIo{}
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			fileio := fileutil.NewFileIo(cfg, store, log)
+			serv := service.NewService(store, log, fileio)
 			update := update2.NewUpdateHandler(serv)
 
 			update.UpdateMetrics(w, r)
