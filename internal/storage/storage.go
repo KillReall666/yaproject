@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"log"
 )
 
 type Metrics struct {
@@ -79,14 +78,14 @@ func (ms *MemStorage) Print() {
 			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
 		}
 	}
-	log.Println("New received metrics: ", metrics)
+	fmt.Println("New received metrics: ", metrics)
 }
 
-func (m *MemStorage) ToJSON() ([]byte, error) {
-	return json.Marshal(m.storage)
+func (ms *MemStorage) ToJSON() ([]byte, error) {
+	return json.Marshal(ms.storage)
 }
 
-func (m *MemStorage) UnmarshalJSONData(data []byte) error {
+func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
 	storageData := make(map[string]json.RawMessage)
 
 	err := json.Unmarshal(data, &storageData)
@@ -101,7 +100,7 @@ func (m *MemStorage) UnmarshalJSONData(data []byte) error {
 			return err
 		}
 
-		m.storage[key] = &metricsData
+		ms.storage[key] = &metricsData
 	}
 	return nil
 }

@@ -1,21 +1,29 @@
 package main
 
 import (
-	"log"
-
 	agent "github.com/KillReall666/yaproject/internal/client"
 	metrics2 "github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/service"
 )
 
 func main() {
+	log, err1 := logger.InitLogger()
+	if err1 != nil {
+		panic("cannot initialize zap")
+	}
+
 	cfg := config.LoadAgentConfig()
 	gms := metrics2.NewGaugeMetricsStorage()
-	cli := agent.NewClient(cfg, gms)
+
+	cli := agent.NewClient(cfg, gms, log)
+
+	app := service.NewAgentService(log, cli)
 
 	err := cli.Run()
 	if err != nil {
-		log.Fatalf("client died on error: %v", err)
+		app.LogInfo("client died on error: %v", err)
 	}
 
 }

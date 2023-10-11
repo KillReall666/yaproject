@@ -1,6 +1,9 @@
 package main
 
 import (
+	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/fileutil"
+	"github.com/KillReall666/yaproject/internal/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -57,8 +60,11 @@ func TestGetHandler(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
+			cfg := config.RunFileIo{}
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			fileio := fileutil.NewFileIo(cfg, store, log)
+			serv := service.NewService(store, log, fileio)
 			get := get.NewGetHandler(serv)
 
 			get.GetMetrics(w, r)
@@ -125,9 +131,11 @@ func TestPostHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
-
+			cfg := config.RunFileIo{}
+			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
-			serv := service.NewService(store)
+			fileio := fileutil.NewFileIo(cfg, store, log)
+			serv := service.NewService(store, log, fileio)
 			update := update2.NewUpdateHandler(serv)
 
 			update.UpdateMetrics(w, r)

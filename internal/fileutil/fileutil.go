@@ -2,9 +2,8 @@ package fileutil
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/KillReall666/yaproject/internal/logger"
 	"io"
-	"log"
 	"os"
 	"runtime"
 	"syscall"
@@ -17,16 +16,18 @@ import (
 type FileIoStruct struct {
 	cfg        config.RunFileIo
 	memStorage *storage.MemStorage
+	logger     *logger.Logger
 }
 
-func NewFileIo(repo *storage.MemStorage, cfg config.RunFileIo) *FileIoStruct {
+func NewFileIo(cfg config.RunFileIo, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
 	return &FileIoStruct{
-		memStorage: repo,
 		cfg:        cfg,
+		memStorage: store,
+		logger:     log,
 	}
 }
 
-func (f FileIoStruct) SaveMetricsToFile(filePath string) error {
+func (f *FileIoStruct) SaveMetricsToFile(filePath string) error {
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND|syscall.O_TRUNC, 0666)
 	if err != nil {
 		return err
@@ -35,10 +36,8 @@ func (f FileIoStruct) SaveMetricsToFile(filePath string) error {
 
 	metrics, err := f.memStorage.ToJSON()
 	if err != nil {
-		log.Fatal("ошибка при преобразовании в формат JSON:", err)
+		f.logger.LogInfo("ошибка при преобразовании в формат JSON:", err)
 	}
-	fmt.Println(string(metrics))
-
 	file.Write(metrics)
 	file.Write([]byte("\n"))
 	return nil
@@ -47,32 +46,30 @@ func (f FileIoStruct) SaveMetricsToFile(filePath string) error {
 func (f *FileIoStruct) LoadFromFile(filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Println("ошибка при открытии файла")
 		return err
 	}
 	defer file.Close()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		log.Println("ошибка при чтении из файла")
+		f.logger.LogInfo("ошибка при чтении из файла")
 		return err
 	}
 
 	err = json.Unmarshal(data, &f.memStorage)
 	if err != nil {
-		log.Println("ошибка при анмаршале файла")
+		f.logger.LogInfo("ошибка при анмаршале файла")
 		return err
 	}
 
 	err = f.memStorage.UnmarshalJSONData(data)
 	if err != nil {
-		fmt.Println("Ошибка при распаковке JSON:", err)
-
+		f.logger.LogInfo("Ошибка при распаковке JSON:", err)
 	}
 	return nil
 }
 
-func (f FileIoStruct) Run() {
+func (f *FileIoStruct) Run() {
 	if f.cfg.Path == "" {
 		return
 	}
@@ -80,7 +77,7 @@ func (f FileIoStruct) Run() {
 	if f.cfg.Restore {
 		err := f.LoadFromFile(f.cfg.Path)
 		if err != nil {
-			log.Println("Ошибка при загрузке из файла:", err)
+			f.logger.LogInfo("ошибка при загрузке из файла: ", err)
 		}
 	}
 
@@ -98,7 +95,7 @@ func (f FileIoStruct) Run() {
 		for range ticker.C {
 			err := f.SaveMetricsToFile(f.cfg.Path)
 			if err != nil {
-				log.Println("ошибка при сохранении текущих значений метрик:", err)
+				f.logger.LogInfo("ошибка при сохранении текущих значений метрик:", err)
 			}
 			ticker.Reset(time.Duration(timeInterval) * time.Second)
 		}
