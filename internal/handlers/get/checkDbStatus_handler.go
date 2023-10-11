@@ -1,32 +1,42 @@
 package get
 
 import (
+	"github.com/KillReall666/yaproject/internal/logger"
 	"net/http"
 )
 
-type PingChecker interface {
-	ConnectionCheck() error
+type DbStatusChecker interface {
+	DbStatusCheck() error
+}
+
+type Logger interface {
 	LogInfo(args ...interface{})
 }
 
-type CheckHandler struct {
-	db     PingChecker
-	logger PingChecker
+type DbStatusHandler struct {
+	db     DbStatusChecker
+	logger Logger
 }
 
-func NewCheckConnHandler(s PingChecker) *CheckHandler {
-	return &CheckHandler{
-		db:     s,
-		logger: s,
+func NewCheckDbStatusHandler(d DbStatusChecker, l *logger.Logger) *DbStatusHandler {
+	return &DbStatusHandler{
+		db:     d,
+		logger: l,
 	}
 }
 
-func (h *CheckHandler) CheckPingWithDb(w http.ResponseWriter, r *http.Request) {
-	err := h.db.ConnectionCheck()
+func (h *DbStatusHandler) DbStatusCheck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
+		return
+	}
+
+	err := h.db.DbStatusCheck()
 	if err != nil {
 		w.WriteHeader(500)
 		h.logger.LogInfo("connection with db not available")
 	}
+
 	w.WriteHeader(200)
 	h.logger.LogInfo("connection established")
 }

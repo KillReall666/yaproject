@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/KillReall666/yaproject/internal/db"
 	"github.com/KillReall666/yaproject/internal/fileutil"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/model"
@@ -11,13 +12,20 @@ type Service struct {
 	repository *storage.MemStorage
 	log        *logger.Logger
 	fileIo     *fileutil.FileIoStruct
+	db         *db.Database
 }
 
-func NewService(repo *storage.MemStorage, log *logger.Logger, fileIo *fileutil.FileIoStruct) *Service {
+func (s *Service) DbStatusCheck() error {
+	s.db.DbStatusCheck()
+	return nil
+}
+
+func NewService(repo *storage.MemStorage, log *logger.Logger, fileIo *fileutil.FileIoStruct, db *db.Database) *Service {
 	return &Service{
 		repository: repo,
 		log:        log,
 		fileIo:     fileIo,
+		db:         db,
 	}
 }
 

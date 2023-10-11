@@ -1,7 +1,6 @@
 package update
 
 import (
-
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -25,9 +24,10 @@ type Handler struct {
 	logger        logger
 }
 
-func NewUpdateHandler(s metricsUpdate) *Handler {
+func NewUpdateHandler(s metricsUpdate, l logger) *Handler {
 	return &Handler{
 		metricsUpdate: s,
+		logger:        l,
 	}
 }
 
@@ -36,7 +36,6 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
 	}
-
 	var intValue int64
 	var floatValue float64
 

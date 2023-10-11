@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	db "github.com/KillReall666/yaproject/internal/db"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/config"
@@ -27,14 +28,19 @@ func main() {
 	}
 
 	store := storage.NewMemStorage()
-
 	fileWriter := fileutil.NewFileIo(fileWriterCfg, store, log)
 
-	app := service.NewService(store, log, fileWriter)
+	db, err := db.GetDB()
+	if err != nil {
+		log.LogInfo("db not loaded!", err)
+	}
+
+	app := service.NewService(store, log, fileWriter, db)
 
 	getHandler := get.NewGetHandler(app)
-	updateHandler := update.NewUpdateHandler(app)
+	updateHandler := update.NewUpdateHandler(app, log)
 	htmlHandler := html.NewHTMLHandler(app)
+	checkConnHandler := get.NewCheckDbStatusHandler(app, log)
 
 	fileWriter.Run()
 
@@ -48,9 +54,10 @@ func main() {
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
+	r.Get("/ping", checkConnHandler.DbStatusCheck)
 
 	app.LogInfo("starting http server to serve metrics on port", cfg.Address)
-	err := http.ListenAndServe(cfg.Address, r)
+	err = http.ListenAndServe(cfg.Address, r)
 	if err != nil {
 		//log.Printf("server is down: %v", err)
 		app.LogInfo("server is down:", err)
