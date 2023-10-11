@@ -6,14 +6,14 @@ import (
 	"log"
 )
 
-type DbConf struct {
+type DBConf struct {
 	DefaultConnStr string `env:"DATABASE_DSN"`
 }
 
 const defaultConnStr = "host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
 
-func LoadDbConfig() DbConf {
-	str := DbConf{}
+func LoadDBConfig() DBConf {
+	str := DBConf{}
 	flag.StringVar(&str.DefaultConnStr, "d", defaultConnStr, "connection string")
 	flag.Parse()
 

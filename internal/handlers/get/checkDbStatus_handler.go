@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-type DbStatusChecker interface {
-	DbStatusCheck() error
+type DBStatusChecker interface {
+	DBStatusCheck() error
 }
 
 type Logger interface {
@@ -14,24 +14,24 @@ type Logger interface {
 }
 
 type DbStatusHandler struct {
-	db     DbStatusChecker
+	db     DBStatusChecker
 	logger Logger
 }
 
-func NewCheckDbStatusHandler(d DbStatusChecker, l *logger.Logger) *DbStatusHandler {
+func NewCheckDBStatusHandler(d DBStatusChecker, l *logger.Logger) *DbStatusHandler {
 	return &DbStatusHandler{
 		db:     d,
 		logger: l,
 	}
 }
 
-func (h *DbStatusHandler) DbStatusCheck(w http.ResponseWriter, r *http.Request) {
+func (h *DbStatusHandler) DBStatusCheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
 
-	err := h.db.DbStatusCheck()
+	err := h.db.DBStatusCheck()
 	if err != nil {
 		w.WriteHeader(500)
 		h.logger.LogInfo("connection with db not available")

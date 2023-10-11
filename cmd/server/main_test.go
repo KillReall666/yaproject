@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/KillReall666/yaproject/internal/config"
+	db2 "github.com/KillReall666/yaproject/internal/db"
 	"github.com/KillReall666/yaproject/internal/fileutil"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"net/http"
@@ -63,8 +64,9 @@ func TestGetHandler(t *testing.T) {
 			cfg := config.RunFileIo{}
 			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
+			db, _ := db2.GetDB()
 			fileio := fileutil.NewFileIo(cfg, store, log)
-			serv := service.NewService(store, log, fileio)
+			serv := service.NewService(store, log, fileio, db)
 			get := get.NewGetHandler(serv)
 
 			get.GetMetrics(w, r)
@@ -134,9 +136,10 @@ func TestPostHandler(t *testing.T) {
 			cfg := config.RunFileIo{}
 			log, _ := logger.InitLogger()
 			store := storage.NewMemStorage()
+			db, _ := db2.GetDB()
 			fileio := fileutil.NewFileIo(cfg, store, log)
-			serv := service.NewService(store, log, fileio)
-			update := update2.NewUpdateHandler(serv)
+			serv := service.NewService(store, log, fileio, db)
+			update := update2.NewUpdateHandler(serv, log)
 
 			update.UpdateMetrics(w, r)
 

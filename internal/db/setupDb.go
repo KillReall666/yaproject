@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/jackc/pgx/v5"
-	_ "github.com/jackc/pgx/v5"
 	"log"
 )
 
@@ -13,7 +12,7 @@ type Database struct {
 }
 
 func GetDB() (*Database, error) {
-	connString := config.LoadDbConfig()
+	connString := config.LoadDBConfig()
 
 	cfg, err := pgx.ParseConfig(connString.DefaultConnStr)
 	if err != nil {
@@ -33,7 +32,7 @@ func GetDB() (*Database, error) {
 	return &Database{db: conn}, nil
 }
 
-func (d *Database) DbStatusCheck() error {
+func (d *Database) DBStatusCheck() error {
 	err := d.db.Ping(context.Background())
 	if err != nil {
 		return err

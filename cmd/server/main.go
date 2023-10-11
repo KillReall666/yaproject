@@ -40,7 +40,7 @@ func main() {
 	getHandler := get.NewGetHandler(app)
 	updateHandler := update.NewUpdateHandler(app, log)
 	htmlHandler := html.NewHTMLHandler(app)
-	checkConnHandler := get.NewCheckDbStatusHandler(app, log)
+	checkConnHandler := get.NewCheckDBStatusHandler(app, log)
 
 	fileWriter.Run()
 
@@ -54,7 +54,7 @@ func main() {
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)
-	r.Get("/ping", checkConnHandler.DbStatusCheck)
+	r.Get("/ping", checkConnHandler.DBStatusCheck)
 
 	app.LogInfo("starting http server to serve metrics on port", cfg.Address)
 	err = http.ListenAndServe(cfg.Address, r)

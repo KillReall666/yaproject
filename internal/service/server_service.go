@@ -15,8 +15,8 @@ type Service struct {
 	db         *db.Database
 }
 
-func (s *Service) DbStatusCheck() error {
-	s.db.DbStatusCheck()
+func (s *Service) DBStatusCheck() error {
+	s.db.DBStatusCheck()
 	return nil
 }
 
