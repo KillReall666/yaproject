@@ -13,19 +13,19 @@ type Logger interface {
 	LogInfo(args ...interface{})
 }
 
-type DbStatusHandler struct {
+type DBStatusHandler struct {
 	db     DBStatusChecker
 	logger Logger
 }
 
-func NewCheckDBStatusHandler(d DBStatusChecker, l *logger.Logger) *DbStatusHandler {
-	return &DbStatusHandler{
+func NewCheckDBStatusHandler(d DBStatusChecker, l *logger.Logger) *DBStatusHandler {
+	return &DBStatusHandler{
 		db:     d,
 		logger: l,
 	}
 }
 
-func (h *DbStatusHandler) DBStatusCheck(w http.ResponseWriter, r *http.Request) {
+func (h *DBStatusHandler) DBStatusCheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
