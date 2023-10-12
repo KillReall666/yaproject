@@ -5,10 +5,13 @@ import (
 	"net/http"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=DBStatusChecker
+
 type DBStatusChecker interface {
 	DBStatusCheck() error
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=Logger
 type Logger interface {
 	LogInfo(args ...interface{})
 }

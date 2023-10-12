@@ -9,25 +9,27 @@ import (
 	"github.com/KillReall666/yaproject/internal/model"
 )
 
-type metricsUpdate interface {
+//go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=SaveMetrics
+
+type SaveMetrics interface {
 	SaveMetrics(request *model.Metrics) error
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
 }
 
-type logger interface {
+type Logger interface {
 	LogInfo(args ...interface{})
 }
 
 type Handler struct {
-	metricsUpdate metricsUpdate
-	logger        logger
+	saveMetrics SaveMetrics
+	logger      Logger
 }
 
-func NewUpdateHandler(s metricsUpdate, l logger) *Handler {
+func NewUpdateHandler(sm SaveMetrics, l Logger) *Handler {
 	return &Handler{
-		metricsUpdate: s,
-		logger:        l,
+		saveMetrics: sm,
+		logger:      l,
 	}
 }
 
@@ -67,7 +69,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:    metricsName,
 				Counter: &intValue,
 			}
-			_ = h.metricsUpdate.SaveMetrics(dto)
+			_ = h.saveMetrics.SaveMetrics(dto)
 
 		} else if metricsType == "gauge" {
 			floatValue = floatValueConv(metricsValue)
@@ -75,7 +77,8 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:  metricsName,
 				Gauge: &floatValue,
 			}
-			_ = h.metricsUpdate.SaveMetrics(dto)
+			_ = h.saveMetrics.SaveMetrics(dto)
+
 		}
 	}
 }
@@ -102,13 +105,13 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			Name:    metrics.ID,
 			Counter: metrics.Delta,
 		}
-		_ = h.metricsUpdate.SaveMetrics(dto)
+		_ = h.saveMetrics.SaveMetrics(dto)
 	} else if metrics.MType == "gauge" {
 		dto := &model.Metrics{
 			Name:  metrics.ID,
 			Gauge: metrics.Value,
 		}
-		_ = h.metricsUpdate.SaveMetrics(dto)
+		_ = h.saveMetrics.SaveMetrics(dto)
 	}
 
 	dto := &model.Metrics{
@@ -118,7 +121,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	var metricsForRequest model.MetricsJSON
 
 	if metrics.MType == "gauge" {
-		value, err1 := h.metricsUpdate.GetFloatMetrics(dto)
+		value, err1 := h.saveMetrics.GetFloatMetrics(dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
@@ -128,7 +131,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 		}
 	} else {
-		value, err2 := h.metricsUpdate.GetCountMetrics(dto)
+		value, err2 := h.saveMetrics.GetCountMetrics(dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
