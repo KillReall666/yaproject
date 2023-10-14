@@ -47,6 +47,11 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	var intValue int64
 	var floatValue float64
 
+	var flag bool
+	if h.cfg.DefaultDBConnStr == "" {
+		flag = true
+	}
+
 	metricsString := handlers.GetURL(r)
 
 	if len(metricsString) < 4 {
@@ -75,7 +80,14 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:    metricsName,
 				Counter: &intValue,
 			}
-			_ = h.saveMetrics.SaveMetrics(dto)
+			if flag {
+				_ = h.saveMetrics.SaveMetrics(dto)
+			} else {
+				err := h.saveMetrics.SaveMetricsToDB(dto)
+				if err != nil {
+					h.logger.LogInfo(err)
+				}
+			}
 
 		} else if metricsType == "gauge" {
 			floatValue = floatValueConv(metricsValue)
@@ -83,8 +95,14 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:  metricsName,
 				Gauge: &floatValue,
 			}
-			_ = h.saveMetrics.SaveMetrics(dto)
-
+			if flag {
+				_ = h.saveMetrics.SaveMetrics(dto)
+			} else {
+				err := h.saveMetrics.SaveMetricsToDB(dto)
+				if err != nil {
+					h.logger.LogInfo(err)
+				}
+			}
 		}
 	}
 }
@@ -120,9 +138,9 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.saveMetrics.SaveMetrics(dto)
 		} else {
 			err = h.saveMetrics.SaveMetricsToDB(dto)
-		}
-		if err != nil {
-			h.logger.LogInfo(err)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		}
 	} else if metrics.MType == "gauge" {
 		dto := &model.Metrics{
@@ -134,9 +152,9 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			_ = h.saveMetrics.SaveMetrics(dto)
 		} else {
 			err = h.saveMetrics.SaveMetricsToDB(dto)
-		}
-		if err != nil {
-			h.logger.LogInfo(err)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		}
 	}
 
