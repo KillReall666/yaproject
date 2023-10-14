@@ -65,3 +65,31 @@ func (s *Service) MetricsPrint() {
 func (s *Service) LogInfo(args ...interface{}) {
 	s.log.Sugar.Info(args)
 }
+
+func (s *Service) SaveMetricsToDB(request *model.Metrics) error {
+	if request.Counter != nil {
+		err := s.db.InsertCountMetrics(request.Name, request.Counter)
+		if err != nil {
+			return err
+		}
+	}
+
+	if request.Gauge != nil {
+		err := s.db.InsertGaugeMetrics(request.Name, request.Gauge)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) GetFloatMetricsFromDB(request *model.Metrics) (float64, error) {
+	value, err := s.db.GetGaugeMetricsFromDB(request.Name)
+	return value, err
+}
+
+func (s *Service) GetCountMetricsFromDB(request *model.Metrics) (int64, error) {
+	value, err := s.db.GetCounterMetricsFromDB(request.Name)
+	return value, err
+}

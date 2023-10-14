@@ -1,5 +1,12 @@
 package config
 
+/*
+import (
+	"flag"
+	"github.com/caarlos0/env"
+)
+
+
 import (
 	"flag"
 	"github.com/caarlos0/env"
@@ -24,3 +31,4 @@ func LoadDBConfig() DBConf {
 
 	return str
 }
+*/

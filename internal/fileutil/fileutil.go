@@ -14,12 +14,12 @@ import (
 )
 
 type FileIoStruct struct {
-	cfg        config.RunFileIo
+	cfg        config.RunConfig
 	memStorage *storage.MemStorage
 	logger     *logger.Logger
 }
 
-func NewFileIo(cfg config.RunFileIo, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
+func NewFileIo(cfg config.RunConfig, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
 	return &FileIoStruct{
 		cfg:        cfg,
 		memStorage: store,

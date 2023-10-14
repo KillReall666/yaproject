@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	db "github.com/KillReall666/yaproject/internal/db"
 	"net/http"
@@ -19,7 +20,6 @@ import (
 
 func main() {
 	cfg := config.LoadServerConfig()
-	fileWriterCfg := config.LoadFileIoConf()
 
 	log, err1 := logger.InitLogger()
 
@@ -28,17 +28,23 @@ func main() {
 	}
 
 	store := storage.NewMemStorage()
-	fileWriter := fileutil.NewFileIo(fileWriterCfg, store, log)
+	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
-	db, err := db.GetDB()
+	db, conn, err := db.GetDB(log, cfg.DefaultDBConnStr)
 	if err != nil {
 		log.LogInfo("db not loaded!", err)
 	}
-
+	if cfg.DefaultDBConnStr != "" {
+		err = db.CreateMetricsTable(conn)
+		if err != nil {
+			log.LogInfo("error creating table: ", err)
+		}
+		defer conn.Close(context.Background())
+	}
 	app := service.NewService(store, log, fileWriter, db)
 
 	getHandler := get.NewGetHandler(app)
-	updateHandler := update.NewUpdateHandler(app, log)
+	updateHandler := update.NewUpdateHandler(app, log, cfg)
 	htmlHandler := html.NewHTMLHandler(app)
 	checkConnHandler := get.NewCheckDBStatusHandler(app, log)
 
