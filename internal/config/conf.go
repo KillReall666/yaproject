@@ -21,7 +21,7 @@ const (
 	defaultServer             = ":8080"
 	defaultPollInterval       = 2
 	defaultReportInterval     = 10
-	defaultConnStr            = "host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
+	defaultConnStr            = "" //"host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
 	defaultSaveOnDiskInterval = 300
 	defaultPathOfFile         = "./metrics-db.json"
 	defaultRestore            = true
@@ -30,7 +30,7 @@ const (
 func LoadAgentConfig() RunConfig {
 	cfg := RunConfig{}
 
-	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics updagte interval in seconds")
+	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics update interval in seconds")
 	flag.IntVar(&cfg.DefaultReportInterval, "r", defaultReportInterval, "metrics sending interval in seconds")
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.Parse()
