@@ -116,7 +116,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			Name:    metrics.ID,
 			Counter: metrics.Delta,
 		}
-		if flag == true {
+		if flag {
 			_ = h.saveMetrics.SaveMetrics(dto)
 		} else {
 			err = h.saveMetrics.SaveMetricsToDB(dto)
@@ -130,7 +130,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			Gauge: metrics.Value,
 		}
 
-		if flag == true {
+		if flag {
 			_ = h.saveMetrics.SaveMetrics(dto)
 		} else {
 			err = h.saveMetrics.SaveMetricsToDB(dto)
@@ -149,7 +149,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	var intVal int64
 
 	if metrics.MType == "gauge" {
-		if flag == true {
+		if flag {
 			floatVal, err = h.saveMetrics.GetFloatMetrics(dto)
 		} else {
 			floatVal, err = h.saveMetrics.GetFloatMetricsFromDB(dto)
@@ -163,7 +163,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		}
 	} else {
-		if flag == true {
+		if flag {
 			intVal, err = h.saveMetrics.GetCountMetrics(dto)
 		} else {
 			intVal, err = h.saveMetrics.GetCountMetricsFromDB(dto)

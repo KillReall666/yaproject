@@ -18,7 +18,7 @@ const createTableQuery = `
 func (d *Database) CreateMetricsTable(conn *pgx.Conn) error {
 	_, err := conn.Exec(context.Background(), createTableQuery)
 	if err != nil {
-		return fmt.Errorf("Error creating metrics table: %v", err)
+		return fmt.Errorf("error creating metrics table: %v", err)
 	}
 	return nil
 }
