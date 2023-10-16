@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/KillReall666/yaproject/internal/config"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -13,15 +14,19 @@ import (
 type metricsGet interface {
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
+	GetFloatMetricsFromDB(request *model.Metrics) (float64, error)
+	GetCountMetricsFromDB(request *model.Metrics) (int64, error)
 }
 
 type Handler struct {
 	metricsGet metricsGet
+	cfg        config.RunConfig
 }
 
-func NewGetHandler(s metricsGet) *Handler {
+func NewGetHandler(s metricsGet, cfg config.RunConfig) *Handler {
 	return &Handler{
 		metricsGet: s,
+		cfg:        cfg,
 	}
 }
 
@@ -78,9 +83,12 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
-
+	var metrics, metricsForRequest model.MetricsJSON
+	var floatVal float64
+	var intVal int64
+	var flag bool
 	var buf bytes.Buffer
-	var metrics model.MetricsJSON
+
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -96,28 +104,43 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		Name: metrics.ID,
 	}
 
-	var metricsForRequest model.MetricsJSON
+	if h.cfg.DefaultDBConnStr == "" {
+		flag = true
+	}
 
 	if metrics.MType == "gauge" {
-		value, err1 := h.metricsGet.GetFloatMetrics(dto)
+		if flag {
+			floatVal, err = h.metricsGet.GetFloatMetrics(dto)
+		} else {
+			floatVal, err = h.metricsGet.GetFloatMetricsFromDB(dto)
+		}
+
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
-			Value: handlers.Float64Ptr(value),
+			Value: handlers.Float64Ptr(floatVal),
 		}
-		if err1 != nil {
-			http.Error(w, err1.Error(), http.StatusNotFound)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+
 	} else {
-		value, err2 := h.metricsGet.GetCountMetrics(dto)
+		if flag {
+			intVal, err = h.metricsGet.GetCountMetrics(dto)
+		} else {
+			intVal, err = h.metricsGet.GetCountMetricsFromDB(dto)
+		}
+
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
-			Delta: handlers.Int64Ptr(value),
+			Delta: handlers.Int64Ptr(intVal),
 		}
-		if err2 != nil {
-			http.Error(w, err2.Error(), http.StatusNotFound)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 	}

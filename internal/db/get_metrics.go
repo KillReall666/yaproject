@@ -2,42 +2,42 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"log"
 )
 
-func (d *Database) GetGaugeMetricsFromDB(name string) (float64, error) {
+func (d *Database) GetGaugeFromDB(name string) (float64, error) {
 	rows, err := d.db.Query(context.Background(), "SELECT gauge FROM metrics WHERE name = $1", name)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
 
-	for rows.Next() {
-		var gauge float64
+	var gauge float64
 
+	for rows.Next() {
 		err := rows.Scan(&gauge)
 		if err != nil {
-			return gauge, nil
+			return 0, nil
 		}
 	}
-	return 0, nil
+	return gauge, nil
 }
 
-func (d *Database) GetCounterMetricsFromDB(name string) (int64, error) {
+func (d *Database) GetCounterFromDB(name string) (int64, error) {
 	rows, err := d.db.Query(context.Background(), "SELECT counter FROM metrics WHERE name = $1", name)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
 
-	for rows.Next() {
-		var counter int64
+	var counter int64
 
+	for rows.Next() {
 		err := rows.Scan(&counter)
 		if err != nil {
-			fmt.Println("Error reading row:", err)
-			return counter, nil
+			log.Println("Error reading row:", err)
+			return 0, nil
 		}
 	}
-	return 0, nil
+	return counter, nil
 }

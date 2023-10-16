@@ -5,15 +5,15 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/model"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
-	"github.com/KillReall666/yaproject/internal/handlers"
-	"github.com/KillReall666/yaproject/internal/model"
 )
 
 type Client struct {
@@ -43,8 +43,10 @@ func (c *Client) Run() error {
 			tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
 
 		case <-tickSender.C:
-			c.MetricsSender(&c.cfg)
+			//c.MetricsSender(&c.cfg)
+			c.PackMetricsSender(&c.cfg)
 			tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
+
 		}
 	}
 }
@@ -64,64 +66,16 @@ func (c *Client) Compress(data []byte) *bytes.Buffer {
 	return &compressedData
 }
 
-func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {
-	for key, value := range c.gms.GaugeStorage {
-		if key == "PollCount" {
-			url := "http://" + cfg.Address + "/update/counter/PollCount/" + c.gms.GaugeStorage["PollCount"]
-			resp, err := http.Post(url, "text/plain", nil)
-			if err != nil {
-				c.logger.LogInfo("ошибка при отправке запроса counter:", err)
-			}
-			defer resp.Body.Close()
-		} else {
-			url := "http://" + cfg.Address + "/update/gauge/" + key + "/" + value
-			resp, err := http.Post(url, "text/plain", nil)
-			if err != nil {
-				c.logger.LogInfo("ошибка при отправке запроса gauge:", err)
-				continue
-			}
-			defer resp.Body.Close()
-		}
-	}
-}
+func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
+	var packDataGauge []model.MetricsJSON
 
-func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 	for key, value := range c.gms.Gauge {
 		metric := model.MetricsJSON{
 			ID:    key,
 			MType: "gauge",
 			Value: handlers.Float64Ptr(value),
 		}
-		data, err1 := json.Marshal(metric)
-		if err1 != nil {
-			c.logger.LogInfo("ошибка при marshal gauge:", err1)
-		}
-
-		compressedData := c.Compress(data)
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
-		defer cancel()
-
-		url := "http://" + cfg.Address + "/update/"
-		req, err2 := http.NewRequestWithContext(ctx, "POST", url, compressedData)
-		if err2 != nil {
-			c.logger.LogInfo("ошибка при запросе gauge", err2)
-		}
-
-		req.Header.Set("Content-Encoding", "gzip")
-
-		client := http.Client{}
-		resp, err3 := client.Do(req)
-		if err3 != nil {
-			c.logger.LogInfo("ошибка при получении ответа gauge:", err3)
-			return err3
-		}
-		defer resp.Body.Close()
-
-		_, err := io.ReadAll(resp.Body)
-		if err != nil {
-			c.logger.LogInfo(err)
-		}
+		packDataGauge = append(packDataGauge, metric)
 	}
 
 	for key, val := range c.gms.Counter {
@@ -130,36 +84,37 @@ func (c *Client) MetricsSender(cfg *config.RunConfig) error {
 			MType: "counter",
 			Delta: handlers.Int64Ptr(val),
 		}
+		packDataGauge = append(packDataGauge, metric)
+	}
 
-		data, err4 := json.Marshal(metric)
-		if err4 != nil {
-			c.logger.LogInfo("ошибка при marshal counter", err4)
-		}
+	data, err1 := json.Marshal(packDataGauge)
+	if err1 != nil {
+		c.logger.LogInfo("ошибка при marshal gauge:", err1)
+	}
+	compressedData := c.Compress(data)
 
-		compressedData := c.Compress(data)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
+	defer cancel()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
-		defer cancel()
+	url := "http://" + cfg.Address + "/updates/"
+	req, err := http.NewRequestWithContext(ctx, "POST", url, compressedData)
+	if err != nil {
+		c.logger.LogInfo("ошибка при запросе gauge", err)
+	}
 
-		url := "http://" + cfg.Address + "/update/"
-		req, err5 := http.NewRequestWithContext(ctx, "POST", url, compressedData)
-		if err5 != nil {
-			c.logger.LogInfo("ошибка при выполнении запроса counter", err5)
-		}
+	req.Header.Set("Content-Encoding", "gzip")
 
-		req.Header.Set("Content-Encoding", "gzip")
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.logger.LogInfo("ошибка при получении ответа gauge:", err)
+		return err
+	}
+	defer resp.Body.Close()
 
-		client := http.Client{}
-		resp, err6 := client.Do(req)
-
-		if err6 != nil {
-			c.logger.LogInfo("ошибка при получении ответа counter:", err6)
-		}
-		defer resp.Body.Close()
-		_, err := io.ReadAll(resp.Body)
-		if err != nil {
-			c.logger.LogInfo(err)
-		}
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		c.logger.LogInfo(err)
 	}
 
 	return nil

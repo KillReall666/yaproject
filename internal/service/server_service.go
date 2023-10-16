@@ -85,11 +85,11 @@ func (s *Service) SaveMetricsToDB(request *model.Metrics) error {
 }
 
 func (s *Service) GetFloatMetricsFromDB(request *model.Metrics) (float64, error) {
-	value, err := s.db.GetGaugeMetricsFromDB(request.Name)
+	value, err := s.db.GetGaugeFromDB(request.Name)
 	return value, err
 }
 
 func (s *Service) GetCountMetricsFromDB(request *model.Metrics) (int64, error) {
-	value, err := s.db.GetCounterMetricsFromDB(request.Name)
+	value, err := s.db.GetCounterFromDB(request.Name)
 	return value, err
 }

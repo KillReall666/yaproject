@@ -24,12 +24,12 @@ func (d *Database) InsertGaugeMetrics(name string, gauge *float64) error {
 
 func (d *Database) InsertCountMetrics(name string, counter *int64) error {
 	insertQuery := `
-        INSERT  INTO metrics (name, counter)
-        VALUES ($1, $2)
-		ON CONFLICT (name)
-		DO UPDATE
-		SET counter = EXCLUDED.counter
-    `
+    INSERT INTO metrics (name, counter)
+    VALUES ($1, $2)
+    ON CONFLICT (name)
+    DO UPDATE
+    SET counter = metrics.counter + EXCLUDED.counter
+`
 
 	_, err := d.db.Exec(context.Background(), insertQuery, name, counter)
 	if err != nil {
