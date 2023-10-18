@@ -20,24 +20,26 @@ func NewMemStorage() *MemStorage {
 	}
 }
 
-func (ms *MemStorage) CountSetter(name string, count int64) {
+func (ms *MemStorage) CountSetter(name string, count int64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
 		ms.storage[name].Count += count
-		return
+		return nil
 	}
 	ms.storage[name].Count += count
+	return nil
 }
 
-func (ms *MemStorage) GaugeSetter(name string, gauge float64) {
+func (ms *MemStorage) GaugeSetter(name string, gauge float64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
 		ms.storage[name].Gauge = gauge
-		return
+		return nil
 	}
 	ms.storage[name].Gauge = gauge
+	return nil
 }
 
 func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
@@ -69,18 +71,6 @@ func (ms *MemStorage) GetAllMetrics() string {
 	return htmlPage
 }
 
-func (ms *MemStorage) Print() {
-	var metrics string
-	for key, value := range ms.storage {
-		if key != "PollCount" {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
-		} else {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
-		}
-	}
-	fmt.Println("New received metrics: ", metrics)
-}
-
 func (ms *MemStorage) ToJSON() ([]byte, error) {
 	return json.Marshal(ms.storage)
 }
@@ -95,7 +85,7 @@ func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
 
 	for key, value := range storageData {
 		metricsData := Metrics{}
-		err := json.Unmarshal(value, &metricsData)
+		err = json.Unmarshal(value, &metricsData)
 		if err != nil {
 			return err
 		}

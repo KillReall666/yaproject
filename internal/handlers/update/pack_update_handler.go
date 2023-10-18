@@ -11,11 +11,8 @@ import (
 
 type PackSaveMetrics interface {
 	SaveMetrics(request *model.Metrics) error
-	SaveMetricsToDB(request *model.Metrics) error
 	GetCountMetrics(request *model.Metrics) (int64, error)
 	GetFloatMetrics(response *model.Metrics) (float64, error)
-	GetFloatMetricsFromDB(request *model.Metrics) (float64, error)
-	GetCountMetricsFromDB(request *model.Metrics) (int64, error)
 }
 
 type PackHandler struct {
@@ -37,13 +34,13 @@ func (h *PackHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
 	}
-	var flag bool
-	if h.cfg.DefaultDBConnStr == "" {
-		flag = true
-	}
 
+	var metricsPack, metricsForRequestPack []model.MetricsJSON
+	var metricsForRequest model.MetricsJSON
+	var floatVal float64
+	var intVal int64
 	var buf bytes.Buffer
-	var metricsPack []model.MetricsJSON
+
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -61,47 +58,21 @@ func (h *PackHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) 
 				Name:    metrics.ID,
 				Counter: metrics.Delta,
 			}
-			if flag {
-				_ = h.PackSaveMetrics.SaveMetrics(dto)
-			} else {
-				err = h.PackSaveMetrics.SaveMetricsToDB(dto)
-				if err != nil {
-					h.logger.LogInfo(err)
-				}
-			}
+			_ = h.PackSaveMetrics.SaveMetrics(dto)
 		} else if metrics.MType == "gauge" {
 			dto := &model.Metrics{
 				Name:  metrics.ID,
 				Gauge: metrics.Value,
 			}
-
-			if flag {
-				_ = h.PackSaveMetrics.SaveMetrics(dto)
-			} else {
-				err = h.PackSaveMetrics.SaveMetricsToDB(dto)
-				if err != nil {
-					h.logger.LogInfo(err)
-				}
-			}
+			_ = h.PackSaveMetrics.SaveMetrics(dto)
 		}
 	}
-
-	var metricsForRequestPack []model.MetricsJSON
-	var metricsForRequest model.MetricsJSON
-	var floatVal float64
-	var intVal int64
-
 	for _, metrics := range metricsPack {
 		dto := &model.Metrics{
 			Name: metrics.ID,
 		}
-
 		if metrics.MType == "gauge" {
-			if flag {
-				floatVal, err = h.PackSaveMetrics.GetFloatMetrics(dto)
-			} else {
-				floatVal, err = h.PackSaveMetrics.GetFloatMetricsFromDB(dto)
-			}
+			floatVal, err = h.PackSaveMetrics.GetFloatMetrics(dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "gauge",
@@ -112,11 +83,7 @@ func (h *PackHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) 
 				http.Error(w, err.Error(), http.StatusNotFound)
 			}
 		} else {
-			if flag {
-				intVal, err = h.PackSaveMetrics.GetCountMetrics(dto)
-			} else {
-				intVal, err = h.PackSaveMetrics.GetCountMetricsFromDB(dto)
-			}
+			intVal, err = h.PackSaveMetrics.GetCountMetrics(dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "counter",
@@ -128,7 +95,7 @@ func (h *PackHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	}
-	
+
 	jsonData, err := json.Marshal(metricsForRequestPack)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -20,28 +20,34 @@ import (
 
 func main() {
 	cfg := config.LoadServerConfig()
-
 	log, err1 := logger.InitLogger()
-
 	if err1 != nil {
 		panic("cannot initialize zap")
 	}
-
 	store := storage.NewMemStorage()
 	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
-	db, conn, err := db.GetDB(log, cfg.DefaultDBConnStr)
-	if err != nil {
-		log.LogInfo("db not loaded!", err)
+	var flag = true
+	if cfg.DefaultDBConnStr == "" {
+		flag = false
+		log.LogInfo("Metric storage switched to memory. The database is not connected.")
 	}
-	if cfg.DefaultDBConnStr != "" {
+
+	db, conn, err := db.GetDB(cfg.DefaultDBConnStr)
+	if err != nil {
+		log.LogInfo("Database not loaded.", err)
+	}
+
+	if flag {
 		err = db.CreateMetricsTable(conn)
 		if err != nil {
-			log.LogInfo("error creating table: ", err)
+			log.LogInfo("error creating table.", err)
 		}
 		defer conn.Close(context.Background())
+		log.LogInfo("Database connection established.")
 	}
-	app := service.NewService(store, log, fileWriter, db)
+
+	app := service.NewService(flag, log, fileWriter, db, store)
 
 	getHandler := get.NewGetHandler(app, cfg)
 	updateHandler := update.NewUpdateHandler(app, log, cfg)

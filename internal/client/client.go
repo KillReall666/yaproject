@@ -43,7 +43,6 @@ func (c *Client) Run() error {
 			tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
 
 		case <-tickSender.C:
-			//c.MetricsSender(&c.cfg)
 			c.PackMetricsSender(&c.cfg)
 			tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
 
@@ -93,7 +92,7 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	}
 	compressedData := c.Compress(data)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
 	url := "http://" + cfg.Address + "/updates/"
