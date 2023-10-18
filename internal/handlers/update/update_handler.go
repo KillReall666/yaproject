@@ -153,12 +153,11 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		intVal, err = h.saveMetrics.GetCountMetrics(dto)
-	}
-
-	metricsForRequest = model.MetricsJSON{
-		ID:    metrics.ID,
-		MType: "counter",
-		Delta: handlers.Int64Ptr(intVal),
+		metricsForRequest = model.MetricsJSON{
+			ID:    metrics.ID,
+			MType: "counter",
+			Delta: handlers.Int64Ptr(intVal),
+		}
 	}
 
 	if err != nil {
