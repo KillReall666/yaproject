@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (d Database) GaugeGetter(key string) (float64, error) {
+func (d *Database) GaugeGetter(key string) (float64, error) {
 	var gauge float64
 	err := retry.Do(
 		func() error {

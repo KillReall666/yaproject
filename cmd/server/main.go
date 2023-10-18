@@ -72,7 +72,6 @@ func main() {
 	app.LogInfo("starting http server to serve metrics on port", cfg.Address)
 	err = http.ListenAndServe(cfg.Address, r)
 	if err != nil {
-		//log.Printf("server is down: %v", err)
 		app.LogInfo("server is down:", err)
 		panic(fmt.Errorf("server is down: %v", err))
 	}

@@ -26,7 +26,10 @@ type Repository interface {
 }
 
 func (s *Service) DBStatusCheck() error {
-	s.db.DBStatusCheck()
+	err := s.db.DBStatusCheck()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -35,6 +38,7 @@ func NewService(useDB bool, log *logger.Logger, fileIo *fileutil.FileIoStruct, d
 		log:    log,
 		fileIo: fileIo,
 		useDB:  useDB,
+		db:     db,
 	}
 	if useDB {
 		service.repository = db

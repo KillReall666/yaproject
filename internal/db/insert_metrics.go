@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (d Database) GaugeSetter(name string, gauge float64) error {
+func (d *Database) GaugeSetter(name string, gauge float64) error {
 	err := retry.Do(
 		func() error {
 			insertQuery := `
@@ -32,7 +32,7 @@ func (d Database) GaugeSetter(name string, gauge float64) error {
 	return err
 }
 
-func (d Database) CountSetter(name string, count int64) error {
+func (d *Database) CountSetter(name string, count int64) error {
 	err := retry.Do(
 		func() error {
 			insertQuery := `

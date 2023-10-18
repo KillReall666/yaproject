@@ -3,7 +3,6 @@ package update
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/KillReall666/yaproject/internal/config"
 	"net/http"
 
@@ -78,7 +77,6 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				h.logger.LogInfo(err)
 			}
 		} else if metricsType == "gauge" {
-			fmt.Println(metricsType, floatValue)
 			floatValue = floatValueConv(metricsValue)
 			dto := &model.Metrics{
 				Name:  metricsName,
