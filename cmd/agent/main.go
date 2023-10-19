@@ -5,7 +5,6 @@ import (
 	metrics2 "github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/logger"
-	"github.com/KillReall666/yaproject/internal/service"
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 
 	cli := agent.NewClient(cfg, gms, log)
 
-	app := service.NewAgentService(log, cli)
+	app := NewAgentService(log, cli)
 
 	err := cli.Run()
 	if err != nil {

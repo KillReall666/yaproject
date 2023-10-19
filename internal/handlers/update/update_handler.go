@@ -3,9 +3,9 @@ package update
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/KillReall666/yaproject/internal/config"
 	"net/http"
 
+	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
 )

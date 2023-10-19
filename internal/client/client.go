@@ -5,15 +5,15 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"github.com/KillReall666/yaproject/internal/handlers"
-	"github.com/KillReall666/yaproject/internal/logger"
-	"github.com/KillReall666/yaproject/internal/model"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/handlers"
+	"github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/model"
 )
 
 type Client struct {
@@ -50,22 +50,7 @@ func (c *Client) Run() error {
 	}
 }
 
-func (c *Client) Compress(data []byte) *bytes.Buffer {
-	var compressedData bytes.Buffer
-	gzipWriter := gzip.NewWriter(&compressedData)
-	_, err := gzipWriter.Write(data)
-	if err != nil {
-		c.logger.LogInfo(err)
-	}
-	err = gzipWriter.Close()
-	if err != nil {
-		c.logger.LogInfo(err)
-
-	}
-	return &compressedData
-}
-
-func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
+func (c *Client) PackMetricsSender(cfg *config.RunConfig) {
 	var packDataGauge []model.MetricsJSON
 
 	for key, value := range c.gms.Gauge {
@@ -107,7 +92,6 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		c.logger.LogInfo("ошибка при получении ответа gauge:", err)
-		return err
 	}
 	defer resp.Body.Close()
 
@@ -115,6 +99,19 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	if err != nil {
 		c.logger.LogInfo(err)
 	}
+}
 
-	return nil
+func (c *Client) Compress(data []byte) *bytes.Buffer {
+	var compressedData bytes.Buffer
+	gzipWriter := gzip.NewWriter(&compressedData)
+	_, err := gzipWriter.Write(data)
+	if err != nil {
+		c.logger.LogInfo(err)
+	}
+	err = gzipWriter.Close()
+	if err != nil {
+		c.logger.LogInfo(err)
+
+	}
+	return &compressedData
 }

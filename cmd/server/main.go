@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	db "github.com/KillReall666/yaproject/internal/db"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/config"
@@ -13,32 +12,29 @@ import (
 	"github.com/KillReall666/yaproject/internal/handlers/update"
 	"github.com/KillReall666/yaproject/internal/handlers/zipdata"
 	logger "github.com/KillReall666/yaproject/internal/logger"
-	"github.com/KillReall666/yaproject/internal/service"
 	"github.com/KillReall666/yaproject/internal/storage"
+	"github.com/KillReall666/yaproject/internal/storage/postgres"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	cfg := config.LoadServerConfig()
 	log, err1 := logger.InitLogger()
 	if err1 != nil {
 		panic("cannot initialize zap")
 	}
+
+	cfg, useDB, err := config.LoadServerConfig()
+	log.LogInfo(err)
+
 	store := storage.NewMemStorage()
 	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
-	var flag = true
-	if cfg.DefaultDBConnStr == "" {
-		flag = false
-		log.LogInfo("Metric storage switched to memory. The database is not connected.")
-	}
-
-	db, conn, err := db.GetDB(cfg.DefaultDBConnStr)
+	db, conn, err := postgres.NewDB(cfg.DefaultDBConnStr)
 	if err != nil {
 		log.LogInfo("Database not loaded.", err)
 	}
 
-	if flag {
+	if useDB {
 		err = db.CreateMetricsTable(conn)
 		if err != nil {
 			log.LogInfo("error creating table.", err)
@@ -47,7 +43,7 @@ func main() {
 		log.LogInfo("Database connection established.")
 	}
 
-	app := service.NewService(flag, log, fileWriter, db, store)
+	app := NewService(useDB, log, fileWriter, db, store)
 
 	getHandler := get.NewGetHandler(app, cfg)
 	updateHandler := update.NewUpdateHandler(app, log, cfg)

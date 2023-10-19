@@ -1,10 +1,11 @@
 package get
 
 import (
-	"github.com/KillReall666/yaproject/internal/handlers/get/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/KillReall666/yaproject/internal/handlers/get/mocks"
 )
 
 func TestDBStatusHandler_DBStatusCheck(t *testing.T) {

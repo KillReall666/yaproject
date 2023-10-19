@@ -3,10 +3,11 @@ package update
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
-	"net/http"
 )
 
 type PackSaveMetrics interface {

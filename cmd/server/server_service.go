@@ -1,19 +1,19 @@
-package service
+package main
 
 import (
-	"github.com/KillReall666/yaproject/internal/db"
 	"github.com/KillReall666/yaproject/internal/fileutil"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/model"
 	"github.com/KillReall666/yaproject/internal/storage"
+	"github.com/KillReall666/yaproject/internal/storage/postgres"
 )
 
 type Service struct {
 	repository Repository //memstorage
 	log        *logger.Logger
 	fileIo     *fileutil.FileIoStruct
-	db         *db.Database
+	db         *postgres.Database
 	useDB      bool
 }
 
@@ -33,7 +33,7 @@ func (s *Service) DBStatusCheck() error {
 	return nil
 }
 
-func NewService(useDB bool, log *logger.Logger, fileIo *fileutil.FileIoStruct, db *db.Database, memStorage *storage.MemStorage) *Service {
+func NewService(useDB bool, log *logger.Logger, fileIo *fileutil.FileIoStruct, db *postgres.Database, memStorage *storage.MemStorage) *Service {
 	service := Service{
 		log:    log,
 		fileIo: fileIo,

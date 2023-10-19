@@ -2,7 +2,6 @@ package fileutil
 
 import (
 	"encoding/json"
-	"github.com/KillReall666/yaproject/internal/logger"
 	"io"
 	"os"
 	"runtime"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/storage"
 )
 

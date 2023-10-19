@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"log"
 
@@ -23,7 +24,7 @@ const (
 	defaultReportInterval     = 10
 	defaultConnStr            = "" //"host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
 	defaultSaveOnDiskInterval = 300
-	defaultPathOfFile         = "./metrics-db.json"
+	defaultPathOfFile         = "./metrics-postgres.json"
 	defaultRestore            = true
 )
 
@@ -43,7 +44,7 @@ func LoadAgentConfig() RunConfig {
 	return cfg
 }
 
-func LoadServerConfig() RunConfig {
+func LoadServerConfig() (RunConfig, bool, error) {
 	cfg := RunConfig{}
 
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
@@ -58,5 +59,12 @@ func LoadServerConfig() RunConfig {
 		log.Println(err)
 	}
 
-	return cfg
+	var flag = true
+	if cfg.DefaultDBConnStr == "" {
+		flag = false
+		err = errors.New("metric storage switched to memory, the database is not connected")
+		return cfg, flag, err
+	}
+
+	return cfg, flag, err
 }

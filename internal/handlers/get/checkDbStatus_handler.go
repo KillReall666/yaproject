@@ -1,8 +1,9 @@
 package get
 
 import (
-	"github.com/KillReall666/yaproject/internal/logger"
 	"net/http"
+
+	"github.com/KillReall666/yaproject/internal/logger"
 )
 
 //go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=DBStatusChecker
@@ -37,7 +38,7 @@ func (h *DBStatusHandler) DBStatusCheck(w http.ResponseWriter, r *http.Request) 
 	err := h.db.DBStatusCheck()
 	if err != nil {
 		w.WriteHeader(500)
-		h.logger.LogInfo("connection with db not available")
+		h.logger.LogInfo("connection with postgres not available")
 	}
 
 	w.WriteHeader(200)
