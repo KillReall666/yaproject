@@ -24,15 +24,18 @@ func main() {
 	}
 
 	cfg, useDB, err := config.LoadServerConfig()
-	log.LogInfo(err)
-
+	if err != nil {
+		log.LogInfo("config not loaded: ", err)
+	}
 	store := storage.NewMemStorage()
 	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
 	db, conn, err := postgres.NewDB(cfg.DefaultDBConnStr)
 	if err != nil {
-		log.LogInfo("Database not loaded.", err)
+		log.LogInfo("Database not loaded: ", err)
 	}
+
+	app := NewService(useDB, log, fileWriter, db, store)
 
 	if useDB {
 		err = db.CreateMetricsTable(conn)
@@ -42,8 +45,6 @@ func main() {
 		defer conn.Close(context.Background())
 		log.LogInfo("Database connection established.")
 	}
-
-	app := NewService(useDB, log, fileWriter, db, store)
 
 	getHandler := get.NewGetHandler(app, cfg)
 	updateHandler := update.NewUpdateHandler(app, log, cfg)
@@ -65,10 +66,10 @@ func main() {
 	r.Get("/", htmlHandler.HTMLOutput)
 	r.Get("/ping", checkConnHandler.DBStatusCheck)
 
-	app.LogInfo("starting http server to serve metrics on port", cfg.Address)
+	log.LogInfo("starting http server to serve metrics on port", cfg.Address)
 	err = http.ListenAndServe(cfg.Address, r)
 	if err != nil {
-		app.LogInfo("server is down:", err)
+		log.LogInfo("server is down:", err)
 		panic(fmt.Errorf("server is down: %v", err))
 	}
 

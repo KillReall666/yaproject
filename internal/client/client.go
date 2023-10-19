@@ -5,8 +5,12 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/avast/retry-go"
 	"io"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/KillReall666/yaproject/internal/client/metrics"
@@ -43,14 +47,17 @@ func (c *Client) Run() error {
 			tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
 
 		case <-tickSender.C:
-			c.PackMetricsSender(&c.cfg)
+			err := c.PackMetricsSender(&c.cfg)
+			if err != nil {
+				c.logger.LogInfo("ошибка при попытке отправки метрик на сервер:", err)
+			}
 			tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
 
 		}
 	}
 }
 
-func (c *Client) PackMetricsSender(cfg *config.RunConfig) {
+func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	var packDataGauge []model.MetricsJSON
 
 	for key, value := range c.gms.Gauge {
@@ -81,24 +88,39 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) {
 	defer cancel()
 
 	url := "http://" + cfg.Address + "/updates/"
-	req, err := http.NewRequestWithContext(ctx, "POST", url, compressedData)
-	if err != nil {
-		c.logger.LogInfo("ошибка при запросе gauge", err)
-	}
+	err := retry.Do(
+		func() error {
+			req, err := http.NewRequestWithContext(ctx, "POST", url, compressedData)
+			if err != nil {
+				c.logger.LogInfo("ошибка при запросе gauge", err)
+			}
 
-	req.Header.Set("Content-Encoding", "gzip")
+			req.Header.Set("Content-Encoding", "gzip")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.logger.LogInfo("ошибка при получении ответа gauge:", err)
-	}
-	defer resp.Body.Close()
+			client := http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				var netErr net.Error
+				if (errors.As(err, &netErr) && netErr.Timeout()) ||
+					strings.Contains(err.Error(), "EOF") ||
+					strings.Contains(err.Error(), "connection reset by peer") {
+					return err // retry only network errors
+				}
+				return retry.Unrecoverable(err)
+			}
+			defer resp.Body.Close()
 
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		c.logger.LogInfo(err)
-	}
+			_, err = io.ReadAll(resp.Body)
+			if err != nil {
+				c.logger.LogInfo(err)
+			}
+			return err
+		},
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay),
+	)
+	return err
 }
 
 func (c *Client) Compress(data []byte) *bytes.Buffer {

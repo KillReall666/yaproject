@@ -10,7 +10,7 @@ import (
 )
 
 type Service struct {
-	repository Repository //memstorage
+	repository Repository
 	log        *logger.Logger
 	fileIo     *fileutil.FileIoStruct
 	db         *postgres.Database
@@ -50,13 +50,17 @@ func NewService(useDB bool, log *logger.Logger, fileIo *fileutil.FileIoStruct, d
 
 func (s *Service) SaveMetrics(request *model.Metrics) error {
 	if request.Counter != nil {
-		s.repository.CountSetter(request.Name, handlers.ConvertToInt64(request.Counter))
-		return nil
+		err := s.repository.CountSetter(request.Name, handlers.ConvertToInt64(request.Counter))
+		if err != nil {
+			return err
+		}
 	}
 
 	if request.Gauge != nil {
-		s.repository.GaugeSetter(request.Name, handlers.ConvertToFloat64(request.Gauge))
-		return nil
+		err := s.repository.GaugeSetter(request.Name, handlers.ConvertToFloat64(request.Gauge))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

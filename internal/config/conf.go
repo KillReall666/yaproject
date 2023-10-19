@@ -59,12 +59,12 @@ func LoadServerConfig() (RunConfig, bool, error) {
 		log.Println(err)
 	}
 
-	var flag = true
+	var connStr = true
 	if cfg.DefaultDBConnStr == "" {
-		flag = false
+		connStr = false
 		err = errors.New("metric storage switched to memory, the database is not connected")
-		return cfg, flag, err
+		return cfg, connStr, err
 	}
 
-	return cfg, flag, err
+	return cfg, connStr, err
 }

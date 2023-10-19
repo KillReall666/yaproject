@@ -59,13 +59,19 @@ func (h *PackHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) 
 				Name:    metrics.ID,
 				Counter: metrics.Delta,
 			}
-			_ = h.PackSaveMetrics.SaveMetrics(dto)
+			err = h.PackSaveMetrics.SaveMetrics(dto)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		} else if metrics.MType == "gauge" {
 			dto := &model.Metrics{
 				Name:  metrics.ID,
 				Gauge: metrics.Value,
 			}
-			_ = h.PackSaveMetrics.SaveMetrics(dto)
+			err = h.PackSaveMetrics.SaveMetrics(dto)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		}
 	}
 	for _, metrics := range metricsPack {
