@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/KillReall666/yaproject/internal/app_server"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/config"
@@ -30,21 +30,13 @@ func main() {
 	store := storage.NewMemStorage()
 	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
-	db, conn, err := postgres.NewDB(cfg.DefaultDBConnStr)
+	db, err := postgres.NewDB(cfg.DefaultDBConnStr)
 	if err != nil {
 		log.LogInfo("Database not loaded: ", err)
 	}
+	log.LogInfo("Database connection established.")
 
-	app := NewService(useDB, log, fileWriter, db, store)
-
-	if useDB {
-		err = db.CreateMetricsTable(conn)
-		if err != nil {
-			log.LogInfo("error creating table.", err)
-		}
-		defer conn.Close(context.Background())
-		log.LogInfo("Database connection established.")
-	}
+	app := app_server.NewService(useDB, log, fileWriter, db, store)
 
 	getHandler := get.NewGetHandler(app, cfg)
 	updateHandler := update.NewUpdateHandler(app, log, cfg)

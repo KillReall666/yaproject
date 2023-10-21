@@ -112,7 +112,7 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 
 			_, err = io.ReadAll(resp.Body)
 			if err != nil {
-				c.logger.LogInfo(err)
+				c.logger.LogInfo("error when reading response body: ", err)
 			}
 			return err
 		},

@@ -1,4 +1,4 @@
-package main
+package app_server
 
 import (
 	"github.com/KillReall666/yaproject/internal/fileutil"

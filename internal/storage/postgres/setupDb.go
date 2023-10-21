@@ -13,18 +13,32 @@ type Database struct {
 	db *pgx.Conn
 }
 
-func NewDB(connString string) (*Database, *pgx.Conn, error) {
+const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS metrics(
+            name TEXT PRIMARY KEY,
+            counter BIGINT,
+            gauge DOUBLE PRECISION,
+            created_at TIMESTAMP DEFAULT now()
+        )
+    `
+
+func NewDB(connString string) (*Database, error) {
 	cfg, err := pgx.ParseConfig(connString)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing connection string: %v", err)
+		return nil, fmt.Errorf("error parsing connection string: %v", err)
 	}
 
 	conn, err := pgx.ConnectConfig(context.Background(), cfg)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error connecting to database: %v", err)
+		return nil, fmt.Errorf("error connecting to database: %v", err)
 	}
 
-	return &Database{db: conn}, conn, nil
+	_, err = conn.Exec(context.Background(), createTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating metrics table: %v", err)
+	}
+
+	return &Database{db: conn}, nil
 }
 
 func (d *Database) DBStatusCheck() error {
