@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/avast/retry-go"
@@ -84,13 +83,10 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	}
 	compressedData := c.Compress(data)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-
 	url := "http://" + cfg.Address + "/updates/"
 	err := retry.Do(
 		func() error {
-			req, err := http.NewRequestWithContext(ctx, "POST", url, compressedData)
+			req, err := http.NewRequest("POST", url, compressedData)
 			if err != nil {
 				c.logger.LogInfo("ошибка при запросе gauge", err)
 			}

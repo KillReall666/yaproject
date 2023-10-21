@@ -23,6 +23,9 @@ const createTableQuery = `
     `
 
 func NewDB(connString string) (*Database, error) {
+	if connString == "" {
+		return nil, nil
+	}
 	cfg, err := pgx.ParseConfig(connString)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing connection string: %v", err)

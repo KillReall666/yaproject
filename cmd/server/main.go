@@ -25,7 +25,7 @@ func main() {
 
 	cfg, useDB, err := config.LoadServerConfig()
 	if err != nil {
-		log.LogInfo("config not loaded: ", err)
+		log.LogInfo("cfg:", err)
 	}
 	store := storage.NewMemStorage()
 	fileWriter := fileutil.NewFileIo(cfg, store, log)
@@ -34,7 +34,6 @@ func main() {
 	if err != nil {
 		log.LogInfo("Database not loaded: ", err)
 	}
-	log.LogInfo("Database connection established.")
 
 	app := appserver.NewService(useDB, log, fileWriter, db, store)
 
