@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/app_server"
+	"github.com/KillReall666/yaproject/internal/appserver"
 	"net/http"
 
 	"github.com/KillReall666/yaproject/internal/config"
@@ -36,7 +36,7 @@ func main() {
 	}
 	log.LogInfo("Database connection established.")
 
-	app := app_server.NewService(useDB, log, fileWriter, db, store)
+	app := appserver.NewService(useDB, log, fileWriter, db, store)
 
 	getHandler := get.NewGetHandler(app, cfg)
 	updateHandler := update.NewUpdateHandler(app, log, cfg)

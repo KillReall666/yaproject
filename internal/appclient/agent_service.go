@@ -1,4 +1,4 @@
-package app_client
+package appclient
 
 import (
 	"github.com/KillReall666/yaproject/internal/client"
