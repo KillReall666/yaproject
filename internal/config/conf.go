@@ -22,7 +22,7 @@ const (
 	defaultServer             = ":8080"
 	defaultPollInterval       = 2
 	defaultReportInterval     = 10
-	defaultConnStr            = "" //"host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
+	defaultConnStr            = "host=localhost user=Mr8 password=Rammstein12! dbname=yaproject_db sslmode=disable"
 	defaultSaveOnDiskInterval = 300
 	defaultPathOfFile         = "./metrics-postgres.json"
 	defaultRestore            = true

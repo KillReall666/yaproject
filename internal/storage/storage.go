@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -20,7 +21,7 @@ func NewMemStorage() *MemStorage {
 	}
 }
 
-func (ms *MemStorage) CountSetter(name string, count int64) error {
+func (ms *MemStorage) CountSetter(ctx context.Context, name string, count int64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
@@ -31,7 +32,7 @@ func (ms *MemStorage) CountSetter(name string, count int64) error {
 	return nil
 }
 
-func (ms *MemStorage) GaugeSetter(name string, gauge float64) error {
+func (ms *MemStorage) GaugeSetter(ctx context.Context, name string, gauge float64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
@@ -42,7 +43,7 @@ func (ms *MemStorage) GaugeSetter(name string, gauge float64) error {
 	return nil
 }
 
-func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
+func (ms *MemStorage) GaugeGetter(ctx context.Context, key string) (float64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
 		return 0, fmt.Errorf("value with key '%s' not found", key)
@@ -50,7 +51,7 @@ func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
 	return ms.storage[key].Gauge, nil
 }
 
-func (ms *MemStorage) CountGetter(key string) (int64, error) {
+func (ms *MemStorage) CountGetter(ctx context.Context, key string) (int64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
 		return 0, fmt.Errorf("value with key '%s' not found", key)

@@ -2,10 +2,12 @@ package get
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -13,10 +15,8 @@ import (
 )
 
 type metricsGet interface {
-	GetCountMetrics(request *model.Metrics) (int64, error)
-	GetFloatMetrics(response *model.Metrics) (float64, error)
-	//GetFloatMetricsFromDB(request *model.Metrics) (float64, error)
-	//GetCountMetricsFromDB(request *model.Metrics) (int64, error)
+	GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error)
+	GetFloatMetrics(ctx context.Context, response *model.Metrics) (float64, error)
 }
 
 type Handler struct {
@@ -36,6 +36,8 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	metricsString := handlers.GetURL(r)
 
@@ -51,7 +53,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		dto := &model.Metrics{
 			Name: metricsName,
 		}
-		value, err1 := h.metricsGet.GetCountMetrics(dto)
+		value, err1 := h.metricsGet.GetCountMetrics(ctx, dto)
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 			return
@@ -65,7 +67,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		dto := &model.Metrics{
 			Name: metricsName,
 		}
-		value, err2 := h.metricsGet.GetFloatMetrics(dto)
+		value, err2 := h.metricsGet.GetFloatMetrics(ctx, dto)
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 			w.WriteHeader(http.StatusNotFound)
@@ -90,6 +92,8 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	var floatVal float64
 	var intVal int64
 	var buf bytes.Buffer
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
@@ -107,7 +111,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if metrics.MType == "gauge" {
-		floatVal, err = h.metricsGet.GetFloatMetrics(dto)
+		floatVal, err = h.metricsGet.GetFloatMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
@@ -119,7 +123,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		intVal, err = h.metricsGet.GetCountMetrics(dto)
+		intVal, err = h.metricsGet.GetCountMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",

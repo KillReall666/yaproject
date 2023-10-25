@@ -52,7 +52,7 @@ func (d *Database) DBStatusCheck() error {
 	return nil
 }
 
-func (d *Database) GaugeSetter(name string, gauge float64) error {
+func (d *Database) GaugeSetter(ctx context.Context, name string, gauge float64) error {
 	insertQuery := `
                 INSERT INTO metrics (name,  gauge)
                 VALUES ($1, $2)
@@ -61,7 +61,7 @@ func (d *Database) GaugeSetter(name string, gauge float64) error {
                 SET gauge = EXCLUDED.gauge
             `
 
-	_, err := d.db.Exec(context.Background(), insertQuery, name, gauge)
+	_, err := d.db.Exec(ctx, insertQuery, name, gauge)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			return fmt.Errorf("error when inserting value to database: %v", pgErr)
@@ -71,7 +71,7 @@ func (d *Database) GaugeSetter(name string, gauge float64) error {
 	return nil
 }
 
-func (d *Database) CountSetter(name string, count int64) error {
+func (d *Database) CountSetter(ctx context.Context, name string, count int64) error {
 	insertQuery := `
                 INSERT INTO metrics (name, counter)
                 VALUES ($1, $2)
@@ -80,7 +80,7 @@ func (d *Database) CountSetter(name string, count int64) error {
                 SET counter = metrics.counter + EXCLUDED.counter
             `
 
-	_, err := d.db.Exec(context.Background(), insertQuery, name, count)
+	_, err := d.db.Exec(ctx, insertQuery, name, count)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			return fmt.Errorf("error when inserting value to database: %v", pgErr)
@@ -90,12 +90,12 @@ func (d *Database) CountSetter(name string, count int64) error {
 	return nil
 }
 
-func (d *Database) GaugeGetter(key string) (float64, error) {
-	intervals := []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
+func (d *Database) GaugeGetter(ctx context.Context, key string) (float64, error) {
+	intervals := []time.Duration{1 * time.Second, 1 * time.Second, 3 * time.Second, 5 * time.Second}
 	var gauge float64
 	found := false
 	for _, interval := range intervals {
-		rows, err := d.db.Query(context.Background(), "SELECT gauge FROM metrics WHERE name = $1", key)
+		rows, err := d.db.Query(ctx, "SELECT gauge FROM metrics WHERE name = $1", key)
 		if err != nil {
 			return 0, err
 		}
@@ -124,14 +124,14 @@ func (d *Database) GaugeGetter(key string) (float64, error) {
 	return gauge, nil
 }
 
-func (d *Database) CountGetter(key string) (int64, error) {
-	intervals := []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
+func (d *Database) CountGetter(ctx context.Context, key string) (int64, error) {
+	intervals := []time.Duration{1 * time.Second, 1 * time.Second, 3 * time.Second, 5 * time.Second}
 
 	var counter int64
 	found := false
 
 	for _, interval := range intervals {
-		rows, err := d.db.Query(context.Background(), "SELECT counter FROM metrics WHERE name = $1", key)
+		rows, err := d.db.Query(ctx, "SELECT counter FROM metrics WHERE name = $1", key)
 		if err != nil {
 			return 0, err
 		}
@@ -153,7 +153,7 @@ func (d *Database) CountGetter(key string) (int64, error) {
 	}
 
 	if !found {
-		return 0, errors.New("count value not found in db")
+		return 0, errors.New("count value not found in postgres")
 	}
 
 	return counter, nil

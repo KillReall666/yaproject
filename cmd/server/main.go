@@ -41,7 +41,7 @@ func main() {
 	updateHandler := update.NewUpdateHandler(app, log, cfg)
 	htmlHandler := html.NewHTMLHandler(app)
 	checkConnHandler := get.NewCheckDBStatusHandler(app, log)
-	packHandler := update.NewPackHandler(app, log, cfg)
+	packHandler := update.NewBatchHandler(app, log, cfg)
 	fileWriter.Run()
 
 	r := chi.NewRouter()
@@ -51,7 +51,7 @@ func main() {
 	r.Post("/update/*", updateHandler.UpdateMetrics)
 	r.Post("/update/", updateHandler.UpdateJSONMetrics)
 	r.Post("/value/", getHandler.GetMetricsJSON)
-	r.Post("/updates/", packHandler.PackUpdateMetrics)
+	r.Post("/updates/", packHandler.BatchUpdateMetrics)
 
 	r.Get("/value/*", getHandler.GetMetrics)
 	r.Get("/", htmlHandler.HTMLOutput)

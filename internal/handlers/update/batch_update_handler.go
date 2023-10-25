@@ -2,8 +2,10 @@ package update
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -11,9 +13,9 @@ import (
 )
 
 type BatchSaveMetrics interface {
-	SaveMetrics(request *model.Metrics) error
-	GetCountMetrics(request *model.Metrics) (int64, error)
-	GetFloatMetrics(response *model.Metrics) (float64, error)
+	SaveMetrics(ctx context.Context, request *model.Metrics) error
+	GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error)
+	GetFloatMetrics(ctx context.Context, response *model.Metrics) (float64, error)
 }
 
 type BatchHandler struct {
@@ -22,7 +24,7 @@ type BatchHandler struct {
 	cfg              config.RunConfig
 }
 
-func NewPackHandler(sm BatchSaveMetrics, l Logger, c config.RunConfig) *BatchHandler {
+func NewBatchHandler(sm BatchSaveMetrics, l Logger, c config.RunConfig) *BatchHandler {
 	return &BatchHandler{
 		BatchSaveMetrics: sm,
 		logger:           l,
@@ -30,7 +32,7 @@ func NewPackHandler(sm BatchSaveMetrics, l Logger, c config.RunConfig) *BatchHan
 	}
 }
 
-func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request) {
+func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
@@ -42,6 +44,9 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 	var intVal int64
 	var buf bytes.Buffer
 
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+	
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -59,7 +64,7 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 				Name:    metrics.ID,
 				Counter: metrics.Delta,
 			}
-			err = h.BatchSaveMetrics.SaveMetrics(dto)
+			err = h.BatchSaveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -68,7 +73,7 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 				Name:  metrics.ID,
 				Gauge: metrics.Value,
 			}
-			err = h.BatchSaveMetrics.SaveMetrics(dto)
+			err = h.BatchSaveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -79,7 +84,7 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 			Name: metrics.ID,
 		}
 		if metrics.MType == "gauge" {
-			floatVal, err = h.BatchSaveMetrics.GetFloatMetrics(dto)
+			floatVal, err = h.BatchSaveMetrics.GetFloatMetrics(ctx, dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "gauge",
@@ -90,7 +95,7 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 				http.Error(w, err.Error(), http.StatusNotFound)
 			}
 		} else {
-			intVal, err = h.BatchSaveMetrics.GetCountMetrics(dto)
+			intVal, err = h.BatchSaveMetrics.GetCountMetrics(ctx, dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "counter",
@@ -105,6 +110,7 @@ func (h *BatchHandler) PackUpdateMetrics(w http.ResponseWriter, r *http.Request)
 
 	jsonData, err := json.Marshal(metricsForRequestPack)
 	if err != nil {
+		h.logger.LogInfo("err 500 when marshal batch metrics: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

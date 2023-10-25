@@ -2,8 +2,10 @@ package update
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
@@ -13,9 +15,9 @@ import (
 //go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=SaveMetrics
 
 type SaveMetrics interface {
-	SaveMetrics(request *model.Metrics) error
-	GetCountMetrics(request *model.Metrics) (int64, error)
-	GetFloatMetrics(response *model.Metrics) (float64, error)
+	SaveMetrics(ctx context.Context, request *model.Metrics) error
+	GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error)
+	GetFloatMetrics(ctx context.Context, response *model.Metrics) (float64, error)
 }
 
 type Logger interface {
@@ -43,6 +45,8 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	var intValue int64
 	var floatValue float64
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	metricsString := handlers.GetURL(r)
 
@@ -72,7 +76,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:    metricsName,
 				Counter: &intValue,
 			}
-			err := h.saveMetrics.SaveMetrics(dto)
+			err := h.saveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -82,7 +86,7 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:  metricsName,
 				Gauge: &floatValue,
 			}
-			err := h.saveMetrics.SaveMetrics(dto)
+			err := h.saveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -98,6 +102,8 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 
 	var buf bytes.Buffer
 	var metrics model.MetricsJSON
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
@@ -115,7 +121,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			Name:    metrics.ID,
 			Counter: metrics.Delta,
 		}
-		err = h.saveMetrics.SaveMetrics(dto)
+		err = h.saveMetrics.SaveMetrics(ctx, dto)
 		if err != nil {
 			h.logger.LogInfo(err)
 		}
@@ -125,7 +131,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			Name:  metrics.ID,
 			Gauge: metrics.Value,
 		}
-		err = h.saveMetrics.SaveMetrics(dto)
+		err = h.saveMetrics.SaveMetrics(ctx, dto)
 		if err != nil {
 			h.logger.LogInfo(err)
 		}
@@ -140,7 +146,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	var intVal int64
 
 	if metrics.MType == "gauge" {
-		floatVal, err = h.saveMetrics.GetFloatMetrics(dto)
+		floatVal, err = h.saveMetrics.GetFloatMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
@@ -150,7 +156,7 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		}
 	} else {
-		intVal, err = h.saveMetrics.GetCountMetrics(dto)
+		intVal, err = h.saveMetrics.GetCountMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",

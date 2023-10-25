@@ -58,7 +58,6 @@ func (c *Client) Run() error {
 
 func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	var packDataGauge []model.MetricsJSON
-
 	for key, value := range c.gms.Gauge {
 		metric := model.MetricsJSON{
 			ID:    key,
@@ -100,10 +99,11 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 				if (errors.As(err, &netErr) && netErr.Timeout()) ||
 					strings.Contains(err.Error(), "EOF") ||
 					strings.Contains(err.Error(), "connection reset by peer") {
-					return err // retry only network errors
+					return err
 				}
 				return retry.Unrecoverable(err)
 			}
+
 			defer resp.Body.Close()
 
 			_, err = io.ReadAll(resp.Body)
