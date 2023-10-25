@@ -2,7 +2,6 @@ package fileutil
 
 import (
 	"encoding/json"
-	"github.com/KillReall666/yaproject/internal/logger"
 	"io"
 	"os"
 	"runtime"
@@ -10,16 +9,17 @@ import (
 	"time"
 
 	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/storage"
 )
 
 type FileIoStruct struct {
-	cfg        config.RunFileIo
+	cfg        config.RunConfig
 	memStorage *storage.MemStorage
 	logger     *logger.Logger
 }
 
-func NewFileIo(cfg config.RunFileIo, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
+func NewFileIo(cfg config.RunConfig, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
 	return &FileIoStruct{
 		cfg:        cfg,
 		memStorage: store,

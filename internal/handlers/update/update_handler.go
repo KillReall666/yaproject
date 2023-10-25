@@ -1,33 +1,40 @@
 package update
 
 import (
-
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
 )
 
-type metricsUpdate interface {
-	SaveMetrics(request *model.Metrics) error
-	GetCountMetrics(request *model.Metrics) (int64, error)
-	GetFloatMetrics(response *model.Metrics) (float64, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.35.4 --name=SaveMetrics
+
+type SaveMetrics interface {
+	SaveMetrics(ctx context.Context, request *model.Metrics) error
+	GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error)
+	GetFloatMetrics(ctx context.Context, response *model.Metrics) (float64, error)
 }
 
-type logger interface {
+type Logger interface {
 	LogInfo(args ...interface{})
 }
 
 type Handler struct {
-	metricsUpdate metricsUpdate
-	logger        logger
+	saveMetrics SaveMetrics
+	logger      Logger
+	cfg         config.RunConfig
 }
 
-func NewUpdateHandler(s metricsUpdate) *Handler {
+func NewUpdateHandler(sm SaveMetrics, l Logger, c config.RunConfig) *Handler {
 	return &Handler{
-		metricsUpdate: s,
+		saveMetrics: sm,
+		logger:      l,
+		cfg:         c,
 	}
 }
 
@@ -36,9 +43,10 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
 	}
-
 	var intValue int64
 	var floatValue float64
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	metricsString := handlers.GetURL(r)
 
@@ -68,15 +76,20 @@ func (h *Handler) UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 				Name:    metricsName,
 				Counter: &intValue,
 			}
-			_ = h.metricsUpdate.SaveMetrics(dto)
-
+			err := h.saveMetrics.SaveMetrics(ctx, dto)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		} else if metricsType == "gauge" {
 			floatValue = floatValueConv(metricsValue)
 			dto := &model.Metrics{
 				Name:  metricsName,
 				Gauge: &floatValue,
 			}
-			_ = h.metricsUpdate.SaveMetrics(dto)
+			err := h.saveMetrics.SaveMetrics(ctx, dto)
+			if err != nil {
+				h.logger.LogInfo(err)
+			}
 		}
 	}
 }
@@ -86,8 +99,12 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
 		return
 	}
+
 	var buf bytes.Buffer
 	var metrics model.MetricsJSON
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -98,18 +115,26 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	if metrics.MType == "counter" {
 		dto := &model.Metrics{
 			Name:    metrics.ID,
 			Counter: metrics.Delta,
 		}
-		_ = h.metricsUpdate.SaveMetrics(dto)
+		err = h.saveMetrics.SaveMetrics(ctx, dto)
+		if err != nil {
+			h.logger.LogInfo(err)
+		}
+
 	} else if metrics.MType == "gauge" {
 		dto := &model.Metrics{
 			Name:  metrics.ID,
 			Gauge: metrics.Value,
 		}
-		_ = h.metricsUpdate.SaveMetrics(dto)
+		err = h.saveMetrics.SaveMetrics(ctx, dto)
+		if err != nil {
+			h.logger.LogInfo(err)
+		}
 	}
 
 	dto := &model.Metrics{
@@ -117,27 +142,30 @@ func (h *Handler) UpdateJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var metricsForRequest model.MetricsJSON
+	var floatVal float64
+	var intVal int64
 
 	if metrics.MType == "gauge" {
-		value, err1 := h.metricsUpdate.GetFloatMetrics(dto)
+		floatVal, err = h.saveMetrics.GetFloatMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
-			Value: handlers.Float64Ptr(value),
+			Value: handlers.Float64Ptr(floatVal),
 		}
-		if err1 != nil {
-			http.Error(w, err1.Error(), http.StatusNotFound)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
 		}
 	} else {
-		value, err2 := h.metricsUpdate.GetCountMetrics(dto)
+		intVal, err = h.saveMetrics.GetCountMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
-			Delta: handlers.Int64Ptr(value),
+			Delta: handlers.Int64Ptr(intVal),
 		}
-		if err2 != nil {
-			http.Error(w, err2.Error(), http.StatusNotFound)
-		}
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 
 	jsonData, err := json.Marshal(metricsForRequest)

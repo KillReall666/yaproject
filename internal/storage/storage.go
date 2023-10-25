@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -20,27 +21,29 @@ func NewMemStorage() *MemStorage {
 	}
 }
 
-func (ms *MemStorage) CountSetter(name string, count int64) {
+func (ms *MemStorage) CountSetter(ctx context.Context, name string, count int64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
 		ms.storage[name].Count += count
-		return
+		return nil
 	}
 	ms.storage[name].Count += count
+	return nil
 }
 
-func (ms *MemStorage) GaugeSetter(name string, gauge float64) {
+func (ms *MemStorage) GaugeSetter(ctx context.Context, name string, gauge float64) error {
 	_, ok := ms.storage[name]
 	if !ok {
 		ms.storage[name] = &Metrics{}
 		ms.storage[name].Gauge = gauge
-		return
+		return nil
 	}
 	ms.storage[name].Gauge = gauge
+	return nil
 }
 
-func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
+func (ms *MemStorage) GaugeGetter(ctx context.Context, key string) (float64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
 		return 0, fmt.Errorf("value with key '%s' not found", key)
@@ -48,7 +51,7 @@ func (ms *MemStorage) GaugeGetter(key string) (float64, error) {
 	return ms.storage[key].Gauge, nil
 }
 
-func (ms *MemStorage) CountGetter(key string) (int64, error) {
+func (ms *MemStorage) CountGetter(ctx context.Context, key string) (int64, error) {
 	_, ok := ms.storage[key]
 	if !ok {
 		return 0, fmt.Errorf("value with key '%s' not found", key)
@@ -69,18 +72,6 @@ func (ms *MemStorage) GetAllMetrics() string {
 	return htmlPage
 }
 
-func (ms *MemStorage) Print() {
-	var metrics string
-	for key, value := range ms.storage {
-		if key != "PollCount" {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Gauge)
-		} else {
-			metrics += fmt.Sprintf("%s:%v. ", key, value.Count)
-		}
-	}
-	fmt.Println("New received metrics: ", metrics)
-}
-
 func (ms *MemStorage) ToJSON() ([]byte, error) {
 	return json.Marshal(ms.storage)
 }
@@ -95,7 +86,7 @@ func (ms *MemStorage) UnmarshalJSONData(data []byte) error {
 
 	for key, value := range storageData {
 		metricsData := Metrics{}
-		err := json.Unmarshal(value, &metricsData)
+		err = json.Unmarshal(value, &metricsData)
 		if err != nil {
 			return err
 		}

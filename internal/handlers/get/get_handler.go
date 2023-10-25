@@ -2,26 +2,32 @@ package get
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"time"
 
+	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/model"
 )
 
 type metricsGet interface {
-	GetCountMetrics(request *model.Metrics) (int64, error)
-	GetFloatMetrics(response *model.Metrics) (float64, error)
+	GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error)
+	GetFloatMetrics(ctx context.Context, response *model.Metrics) (float64, error)
 }
 
 type Handler struct {
 	metricsGet metricsGet
+	cfg        config.RunConfig
 }
 
-func NewGetHandler(s metricsGet) *Handler {
+func NewGetHandler(s metricsGet, cfg config.RunConfig) *Handler {
 	return &Handler{
 		metricsGet: s,
+		cfg:        cfg,
 	}
 }
 
@@ -30,6 +36,8 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
 
 	metricsString := handlers.GetURL(r)
 
@@ -45,11 +53,12 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		dto := &model.Metrics{
 			Name: metricsName,
 		}
-		value, err1 := h.metricsGet.GetCountMetrics(dto)
+		value, err1 := h.metricsGet.GetCountMetrics(ctx, dto)
 		if err1 != nil {
 			http.Error(w, err1.Error(), http.StatusNotFound)
 			return
 		} else {
+			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, value)
 			return
 		}
@@ -58,11 +67,12 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		dto := &model.Metrics{
 			Name: metricsName,
 		}
-		value, err2 := h.metricsGet.GetFloatMetrics(dto)
+		value, err2 := h.metricsGet.GetFloatMetrics(ctx, dto)
 		if err2 != nil {
 			http.Error(w, err2.Error(), http.StatusNotFound)
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, value)
 			return
 		}
@@ -78,9 +88,13 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return
 	}
-
+	var metrics, metricsForRequest model.MetricsJSON
+	var floatVal float64
+	var intVal int64
 	var buf bytes.Buffer
-	var metrics model.MetricsJSON
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -96,28 +110,29 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		Name: metrics.ID,
 	}
 
-	var metricsForRequest model.MetricsJSON
-
 	if metrics.MType == "gauge" {
-		value, err1 := h.metricsGet.GetFloatMetrics(dto)
+		floatVal, err = h.metricsGet.GetFloatMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
-			Value: handlers.Float64Ptr(value),
+			Value: handlers.Float64Ptr(floatVal),
 		}
-		if err1 != nil {
-			http.Error(w, err1.Error(), http.StatusNotFound)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			log.Println(err)
 			return
 		}
 	} else {
-		value, err2 := h.metricsGet.GetCountMetrics(dto)
+		intVal, err = h.metricsGet.GetCountMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
-			Delta: handlers.Int64Ptr(value),
+			Delta: handlers.Int64Ptr(intVal),
 		}
-		if err2 != nil {
-			http.Error(w, err2.Error(), http.StatusNotFound)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			log.Println(err)
 			return
 		}
 	}

@@ -23,6 +23,7 @@ func (h *Handler) HTMLOutput(w http.ResponseWriter, r *http.Request) {
 	htmlPage := h.metricsHTML.PrintForHTML()
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(200)
 	fmt.Fprint(w, htmlPage)
 
 }

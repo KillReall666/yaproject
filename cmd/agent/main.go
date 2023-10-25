@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/KillReall666/yaproject/internal/appclient"
 	agent "github.com/KillReall666/yaproject/internal/client"
 	metrics2 "github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/logger"
-	"github.com/KillReall666/yaproject/internal/service"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 
 	cli := agent.NewClient(cfg, gms, log)
 
-	app := service.NewAgentService(log, cli)
+	app := appclient.NewAgentService(log, cli)
 
 	err := cli.Run()
 	if err != nil {
