@@ -3,6 +3,9 @@ package client
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/avast/retry-go"
@@ -58,6 +61,9 @@ func (c *Client) Run() error {
 
 func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	var packDataGauge []model.MetricsJSON
+	var compressedData *bytes.Buffer
+	var hash string
+
 	for key, value := range c.gms.Gauge {
 		metric := model.MetricsJSON{
 			ID:    key,
@@ -80,7 +86,13 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 	if err1 != nil {
 		c.logger.LogInfo("ошибка при marshal gauge:", err1)
 	}
-	compressedData := c.Compress(data)
+
+	if c.cfg.HashKey != "" {
+		hash = c.computeSHA256Hash(data)
+		compressedData = c.Compress(data)
+	} else {
+		compressedData = c.Compress(data)
+	}
 
 	url := "http://" + cfg.Address + "/updates/"
 	err := retry.Do(
@@ -90,9 +102,14 @@ func (c *Client) PackMetricsSender(cfg *config.RunConfig) error {
 				c.logger.LogInfo("ошибка при запросе gauge", err)
 			}
 
+			if c.cfg.HashKey != "" {
+				req.Header.Set("HashSHA256", hash)
+			}
+
 			req.Header.Set("Content-Encoding", "gzip")
 
 			client := http.Client{}
+
 			resp, err := client.Do(req)
 			if err != nil {
 				var netErr net.Error
@@ -124,12 +141,21 @@ func (c *Client) Compress(data []byte) *bytes.Buffer {
 	gzipWriter := gzip.NewWriter(&compressedData)
 	_, err := gzipWriter.Write(data)
 	if err != nil {
-		c.logger.LogInfo(err)
+		c.logger.LogInfo("compression error: ", err)
 	}
 	err = gzipWriter.Close()
 	if err != nil {
 		c.logger.LogInfo(err)
-
 	}
 	return &compressedData
+}
+
+func (c *Client) computeSHA256Hash(data []byte) string {
+	if c.cfg.HashKey == "" {
+		return ""
+	}
+	hash := hmac.New(sha256.New, []byte(c.cfg.HashKey))
+	hash.Write(data)
+	hashBytes := hash.Sum(nil)
+	return hex.EncodeToString(hashBytes)
 }
