@@ -18,7 +18,7 @@ func main() {
 	gms := metrics2.NewGaugeMetricsStorage()
 
 	cli := agent.NewClient(cfg, gms, log)
-	
+
 	app := appclient.NewAgentService(log, cli)
 
 	err := cli.Run()
