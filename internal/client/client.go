@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/avast/retry-go"
 	"io"
 	"net"
@@ -15,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/logger"
