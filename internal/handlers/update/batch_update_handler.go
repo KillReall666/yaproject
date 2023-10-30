@@ -1,7 +1,6 @@
 package update
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -40,21 +39,13 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 
 	var metricsPack, metricsForRequestPack []model.MetricsJSON
 	var metricsForRequest model.MetricsJSON
-	var floatVal float64
-	var intVal int64
-	var buf bytes.Buffer
 
 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
 	defer cancel()
-	
-	_, err := buf.ReadFrom(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 
-	if err = json.Unmarshal(buf.Bytes(), &metricsPack); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&metricsPack); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		h.logger.LogInfo("error when decode in batch handler: ", err)
 		return
 	}
 
@@ -64,7 +55,7 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 				Name:    metrics.ID,
 				Counter: metrics.Delta,
 			}
-			err = h.BatchSaveMetrics.SaveMetrics(ctx, dto)
+			err := h.BatchSaveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -73,7 +64,7 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 				Name:  metrics.ID,
 				Gauge: metrics.Value,
 			}
-			err = h.BatchSaveMetrics.SaveMetrics(ctx, dto)
+			err := h.BatchSaveMetrics.SaveMetrics(ctx, dto)
 			if err != nil {
 				h.logger.LogInfo(err)
 			}
@@ -84,7 +75,7 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 			Name: metrics.ID,
 		}
 		if metrics.MType == "gauge" {
-			floatVal, err = h.BatchSaveMetrics.GetFloatMetrics(ctx, dto)
+			floatVal, err := h.BatchSaveMetrics.GetFloatMetrics(ctx, dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "gauge",
@@ -95,7 +86,7 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 				http.Error(w, err.Error(), http.StatusNotFound)
 			}
 		} else {
-			intVal, err = h.BatchSaveMetrics.GetCountMetrics(ctx, dto)
+			intVal, err := h.BatchSaveMetrics.GetCountMetrics(ctx, dto)
 			metricsForRequest = model.MetricsJSON{
 				ID:    metrics.ID,
 				MType: "counter",

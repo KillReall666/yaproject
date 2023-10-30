@@ -2,15 +2,14 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"time"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"log"
 )
 
 type Database struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 const createTableQuery = `
@@ -26,12 +25,8 @@ func NewDB(connString string) (*Database, error) {
 	if connString == "" {
 		return nil, nil
 	}
-	cfg, err := pgx.ParseConfig(connString)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing connection string: %v", err)
-	}
 
-	conn, err := pgx.ConnectConfig(context.Background(), cfg)
+	conn, err := pgxpool.New(context.Background(), connString) //cfg
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to database: %v", err)
 	}
@@ -40,6 +35,9 @@ func NewDB(connString string) (*Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating metrics table: %v", err)
 	}
+
+	//TODO: Добавить логгер
+	log.Println("Database loaded.")
 
 	return &Database{db: conn}, nil
 }
@@ -60,7 +58,7 @@ func (d *Database) GaugeSetter(ctx context.Context, name string, gauge float64) 
                 DO UPDATE
                 SET gauge = EXCLUDED.gauge
             `
-
+  
 	_, err := d.db.Exec(ctx, insertQuery, name, gauge)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
@@ -79,7 +77,6 @@ func (d *Database) CountSetter(ctx context.Context, name string, count int64) er
                 DO UPDATE
                 SET counter = metrics.counter + EXCLUDED.counter
             `
-
 	_, err := d.db.Exec(ctx, insertQuery, name, count)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
@@ -91,69 +88,27 @@ func (d *Database) CountSetter(ctx context.Context, name string, count int64) er
 }
 
 func (d *Database) GaugeGetter(ctx context.Context, key string) (float64, error) {
-	intervals := []time.Duration{1 * time.Second, 1 * time.Second, 3 * time.Second, 5 * time.Second}
 	var gauge float64
-	found := false
-	for _, interval := range intervals {
-		rows, err := d.db.Query(ctx, "SELECT gauge FROM metrics WHERE name = $1", key)
-		if err != nil {
-			return 0, err
-		}
 
-		defer rows.Close()
+	row := d.db.QueryRow(ctx, "SELECT gauge FROM metrics WHERE name = $1 limit 1", key)
 
-		for rows.Next() {
-			err = rows.Scan(&gauge)
-			if err != nil {
-				return 0, fmt.Errorf("error get gauge metric: %v", err)
-			}
-			found = true
-		}
-
-		if found {
-			break
-		}
-
-		time.Sleep(interval)
-	}
-
-	if !found {
-		return 0, errors.New("gauge value not found in postgres")
+	err := row.Scan(&gauge)
+	if err != nil {
+		return 0, fmt.Errorf("error get gauge metric: %v", err)
 	}
 
 	return gauge, nil
 }
 
 func (d *Database) CountGetter(ctx context.Context, key string) (int64, error) {
-	intervals := []time.Duration{1 * time.Second, 1 * time.Second, 3 * time.Second, 5 * time.Second}
-
 	var counter int64
-	found := false
 
-	for _, interval := range intervals {
-		rows, err := d.db.Query(ctx, "SELECT counter FROM metrics WHERE name = $1", key)
-		if err != nil {
-			return 0, err
-		}
-		defer rows.Close()
+	row := d.db.QueryRow(ctx, "SELECT counter FROM metrics WHERE name = $1 limit 1", key)
 
-		for rows.Next() {
-			err = rows.Scan(&counter)
-			if err != nil {
-				return 0, fmt.Errorf("error get count metric: %v", err)
-			}
-			found = true
-		}
+	err := row.Scan(&counter)
+	if err != nil {
+		return 0, fmt.Errorf("error get count metric: %v", err)
 
-		if found {
-			break
-		}
-
-		time.Sleep(interval)
-	}
-
-	if !found {
-		return 0, errors.New("count value not found in postgres")
 	}
 
 	return counter, nil

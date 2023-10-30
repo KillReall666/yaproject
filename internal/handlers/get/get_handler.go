@@ -1,7 +1,6 @@
 package get
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -89,19 +88,11 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var metrics, metricsForRequest model.MetricsJSON
-	var floatVal float64
-	var intVal int64
-	var buf bytes.Buffer
+
 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
 	defer cancel()
 
-	_, err := buf.ReadFrom(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err = json.Unmarshal(buf.Bytes(), &metrics); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -111,7 +102,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if metrics.MType == "gauge" {
-		floatVal, err = h.metricsGet.GetFloatMetrics(ctx, dto)
+		floatVal, err := h.metricsGet.GetFloatMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "gauge",
@@ -123,7 +114,7 @@ func (h *Handler) GetMetricsJSON(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		intVal, err = h.metricsGet.GetCountMetrics(ctx, dto)
+		intVal, err := h.metricsGet.GetCountMetrics(ctx, dto)
 		metricsForRequest = model.MetricsJSON{
 			ID:    metrics.ID,
 			MType: "counter",
