@@ -94,30 +94,25 @@ func (c *Client) Run() error {
 	defer tickSender.Stop()
 
 	go func() {
-		for {
-			select {
-			case <-tickUpdater.C:
-				c.gms.UpdateMetrics()
-				c.gms.Counter["PollCount"]++
-				tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
-				c.MetricsPrepare(metricsCh)
-				c.NewMetricsPrepare(metricsCh)
-			}
+		for range tickUpdater.C {
+			c.gms.UpdateMetrics()
+			c.gms.Counter["PollCount"]++
+			tickUpdater.Reset(time.Duration(c.cfg.DefaultPollInterval) * time.Second)
+			c.MetricsPrepare(metricsCh)
+			c.NewMetricsPrepare(metricsCh)
 		}
 	}()
 
-	for {
-		select {
-		case <-tickSender.C:
-			for i := 0; i < c.cfg.RateLimit; i++ {
-				err := c.metricsSend(metricsCh)
-				if err != nil {
-					c.logger.LogInfo("ошибка при попытке отправки метрик на сервер:", err)
-				}
-				tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
+	for range tickSender.C {
+		for i := 0; i < c.cfg.RateLimit; i++ {
+			err := c.metricsSend(metricsCh)
+			if err != nil {
+				c.logger.LogInfo("ошибка при попытке отправки метрик на сервер:", err)
 			}
+			tickSender.Reset(time.Duration(c.cfg.DefaultReportInterval) * time.Second)
 		}
 	}
+	return nil
 }
 
 func (c *Client) metricsSend(metricsCh chan []byte) error {
