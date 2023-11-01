@@ -17,6 +17,7 @@ type RunConfig struct {
 	Path                  string `env:"FILE_STORAGE_PATH"`
 	Restore               bool   `env:"RESTORE"`
 	HashKey               string `env:"KEY"`
+	RateLimit             int    `env:"RATE_LIMIT"`
 }
 
 const (
@@ -36,6 +37,7 @@ func LoadAgentConfig() RunConfig {
 	flag.IntVar(&cfg.DefaultReportInterval, "r", defaultReportInterval, "metrics sending interval in seconds")
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.StringVar(&cfg.HashKey, "k", "", "hash key")
+	flag.IntVar(&cfg.RateLimit, "l", 5, "pool workers limit")
 
 	flag.Parse()
 
