@@ -118,6 +118,7 @@ func (c *Client) Run() error {
 func (c *Client) metricsSend(metricsCh chan []byte) error {
 	var compressedData *bytes.Buffer
 	var hash string
+	var err error
 	url := "http://" + c.cfg.Address + "/updates/"
 
 	for data := range metricsCh {
@@ -128,7 +129,7 @@ func (c *Client) metricsSend(metricsCh chan []byte) error {
 			compressedData = c.Compress(data)
 		}
 
-		err := retry.Do(
+		err = retry.Do(
 			func() error {
 				req, err := http.NewRequest("POST", url, compressedData)
 				if err != nil {
@@ -166,9 +167,8 @@ func (c *Client) metricsSend(metricsCh chan []byte) error {
 			retry.Delay(time.Second),
 			retry.DelayType(retry.BackOffDelay),
 		)
-		return err
 	}
-	return nil
+	return err
 }
 
 func (c *Client) Compress(data []byte) *bytes.Buffer {
