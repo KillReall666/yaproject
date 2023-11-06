@@ -2,61 +2,52 @@ package main
 
 import (
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/appserver"
-	"github.com/KillReall666/yaproject/internal/config"
-	"github.com/KillReall666/yaproject/internal/fileutil"
-	"github.com/KillReall666/yaproject/internal/handlers/get"
 	"github.com/KillReall666/yaproject/internal/handlers/html"
 	"github.com/KillReall666/yaproject/internal/handlers/update"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/KillReall666/yaproject/internal/config"
+	"github.com/KillReall666/yaproject/internal/handlers/getmetrics"
 	"github.com/KillReall666/yaproject/internal/handlers/zipdata"
 	"github.com/KillReall666/yaproject/internal/hashmiddleware"
-	logger "github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/logger"
+	"github.com/KillReall666/yaproject/internal/servicemetric"
 	"github.com/KillReall666/yaproject/internal/storage"
-	"github.com/KillReall666/yaproject/internal/storage/postgres"
-	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func main() {
-	log, err1 := logger.InitLogger()
-	if err1 != nil {
+	log, err := logger.InitLogger()
+	if err != nil {
 		panic("cannot initialize zap")
 	}
 
-	cfg, useDB, err := config.LoadServerConfig()
+	cfg, err := config.LoadForServer()
 	if err != nil {
 		log.LogInfo("cfg:", err)
 	}
-	store := storage.NewMemStorage()
-	fileWriter := fileutil.NewFileIo(cfg, store, log)
 
-	db, err := postgres.NewDB(cfg.DefaultDBConnStr)
+	store, err := storage.NewStore(cfg, log)
 	if err != nil {
-		log.LogInfo("Database not loaded: ", err)
+		log.LogInfo(err)
 	}
 
-	app := appserver.NewService(useDB, log, fileWriter, db, store)
-
-	getHandler := get.NewGetHandler(app, cfg)
-	updateHandler := update.NewUpdateHandler(app, log, cfg)
-	htmlHandler := html.NewHTMLHandler(app)
-	checkConnHandler := get.NewCheckDBStatusHandler(app, log)
-	packHandler := update.NewBatchHandler(app, log, cfg)
-	fileWriter.Run()
+	app := servicemetric.NewService(log, store)
 
 	r := chi.NewRouter()
 	r.Use(log.MyLogger)
 	r.Use(zipdata.GzipMiddleware)
 	r.Use(hashmiddleware.NewHashMiddleware(cfg.HashKey))
 
-	r.Post("/update/*", updateHandler.UpdateMetrics)
-	r.Post("/update/", updateHandler.UpdateJSONMetrics)
-	r.Post("/value/", getHandler.GetMetricsJSON)
-	r.Post("/updates/", packHandler.BatchUpdateMetrics)
+	r.Post("/update/*", update.NewUpdateHandler(app, log, cfg).UpdateMetrics)
+	r.Post("/update/", update.NewUpdateHandler(app, log, cfg).UpdateJSONMetrics)
+	r.Post("/value/", getmetrics.NewHandler(app, cfg).GetMetricsJSON)
+	r.Post("/updates/", update.NewBatchHandler(app, log, cfg).BatchUpdateMetrics)
 
-	r.Get("/value/*", getHandler.GetMetrics)
-	r.Get("/", htmlHandler.HTMLOutput)
-	r.Get("/ping", checkConnHandler.DBStatusCheck)
+	r.Get("/value/*", getmetrics.NewHandler(app, cfg).Metrics)
+	r.Get("/", html.NewHTMLHandler(app).HTMLOutput)
+	r.Get("/ping", getmetrics.NewCheckDBStatusHandler(app, log).DBStatusCheck)
 
 	log.LogInfo("starting http server to serve metrics on port", cfg.Address)
 	err = http.ListenAndServe(cfg.Address, r)

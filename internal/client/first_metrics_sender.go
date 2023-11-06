@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/KillReall666/yaproject/internal/config"
 	"net/http"
+
+	"github.com/KillReall666/yaproject/internal/config"
 )
 
 func (c *Client) MetricsSenderOld(cfg *config.RunConfig) {

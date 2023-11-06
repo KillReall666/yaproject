@@ -1,11 +1,11 @@
-package get
+package getmetrics
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/KillReall666/yaproject/internal/handlers/get/mocks"
+	"github.com/KillReall666/yaproject/internal/handlers/getmetrics/mocks"
 )
 
 func TestDBStatusHandler_DBStatusCheck(t *testing.T) {

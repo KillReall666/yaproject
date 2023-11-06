@@ -18,6 +18,7 @@ type RunConfig struct {
 	Restore               bool   `env:"RESTORE"`
 	HashKey               string `env:"KEY"`
 	RateLimit             int    `env:"RATE_LIMIT"`
+	UseDB                 bool
 }
 
 const (
@@ -30,7 +31,7 @@ const (
 	defaultRestore            = true
 )
 
-func LoadAgentConfig() RunConfig {
+func LoadForAgent() RunConfig {
 	cfg := RunConfig{}
 
 	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics update interval in seconds")
@@ -49,7 +50,7 @@ func LoadAgentConfig() RunConfig {
 	return cfg
 }
 
-func LoadServerConfig() (RunConfig, bool, error) {
+func LoadForServer() (RunConfig, error) {
 	cfg := RunConfig{}
 
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
@@ -65,12 +66,12 @@ func LoadServerConfig() (RunConfig, bool, error) {
 		log.Println(err)
 	}
 
-	var connStr = true
+	cfg.UseDB = true
 	if cfg.DefaultDBConnStr == "" {
-		connStr = false
+		cfg.UseDB = false
 		err = errors.New("metric storage switched to memory, the database is not connected")
-		return cfg, connStr, err
+		return cfg, err
 	}
 
-	return cfg, connStr, err
+	return cfg, err
 }

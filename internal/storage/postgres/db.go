@@ -58,7 +58,7 @@ func (d *Database) GaugeSetter(ctx context.Context, name string, gauge float64) 
                 DO UPDATE
                 SET gauge = EXCLUDED.gauge
             `
-  
+
 	_, err := d.db.Exec(ctx, insertQuery, name, gauge)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
@@ -94,7 +94,7 @@ func (d *Database) GaugeGetter(ctx context.Context, key string) (float64, error)
 
 	err := row.Scan(&gauge)
 	if err != nil {
-		return 0, fmt.Errorf("error get gauge metric: %v", err)
+		return 0, fmt.Errorf("error getmetrics gauge metric: %v", err)
 	}
 
 	return gauge, nil
@@ -107,7 +107,7 @@ func (d *Database) CountGetter(ctx context.Context, key string) (int64, error) {
 
 	err := row.Scan(&counter)
 	if err != nil {
-		return 0, fmt.Errorf("error get count metric: %v", err)
+		return 0, fmt.Errorf("error getmetrics count metric: %v", err)
 
 	}
 

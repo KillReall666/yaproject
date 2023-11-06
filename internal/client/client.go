@@ -14,13 +14,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go"
+	"github.com/shirou/gopsutil/mem"
+
 	"github.com/KillReall666/yaproject/internal/client/metrics"
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/model"
-	"github.com/avast/retry-go"
-	"github.com/shirou/gopsutil/mem"
 )
 
 type Client struct {
@@ -57,9 +58,9 @@ func (c *Client) MetricsPrepare(metricsCh chan []byte) {
 		packDataGauge = append(packDataGauge, metric)
 	}
 
-	data, err1 := json.Marshal(packDataGauge)
-	if err1 != nil {
-		c.logger.LogInfo("ошибка при marshal gauge:", err1)
+	data, err := json.Marshal(packDataGauge)
+	if err != nil {
+		c.logger.LogInfo("ошибка при marshal gauge:", err)
 	}
 	metricsCh <- data
 }

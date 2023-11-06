@@ -1,19 +1,17 @@
-package appserver
+package servicemetric
 
 import (
 	"context"
-	"github.com/KillReall666/yaproject/internal/fileutil"
+
 	"github.com/KillReall666/yaproject/internal/handlers"
 	"github.com/KillReall666/yaproject/internal/logger"
 	"github.com/KillReall666/yaproject/internal/model"
-	"github.com/KillReall666/yaproject/internal/storage"
 	"github.com/KillReall666/yaproject/internal/storage/postgres"
 )
 
-type Service struct {
+type service struct {
 	repository Repository
 	log        *logger.Logger
-	fileIo     *fileutil.FileIoStruct
 	db         *postgres.Database
 	useDB      bool
 }
@@ -26,7 +24,7 @@ type Repository interface {
 	GetAllMetrics() string
 }
 
-func (s *Service) DBStatusCheck() error {
+func (s *service) DBStatusCheck() error {
 	err := s.db.DBStatusCheck()
 	if err != nil {
 		return err
@@ -34,22 +32,16 @@ func (s *Service) DBStatusCheck() error {
 	return nil
 }
 
-func NewService(useDB bool, log *logger.Logger, fileIo *fileutil.FileIoStruct, db *postgres.Database, memStorage *storage.MemStorage) *Service {
-	service := Service{
-		log:    log,
-		fileIo: fileIo,
-		useDB:  useDB,
-		db:     db,
+func NewService(log *logger.Logger, storage Repository) *service {
+	service := service{
+		log:        log,
+		repository: storage,
 	}
-	if useDB {
-		service.repository = db
-	} else {
-		service.repository = memStorage
-	}
+
 	return &service
 }
 
-func (s *Service) SaveMetrics(ctx context.Context, request *model.Metrics) error {
+func (s *service) SaveMetrics(ctx context.Context, request *model.Metrics) error {
 	if request.Counter != nil {
 		err := s.repository.CountSetter(ctx, request.Name, handlers.ConvertToInt64(request.Counter))
 		if err != nil {
@@ -66,22 +58,22 @@ func (s *Service) SaveMetrics(ctx context.Context, request *model.Metrics) error
 	return nil
 }
 
-func (s *Service) GetFloatMetrics(ctx context.Context, request *model.Metrics) (float64, error) {
+func (s *service) GetFloatMetrics(ctx context.Context, request *model.Metrics) (float64, error) {
 	value, err := s.repository.GaugeGetter(ctx, request.Name)
 	return value, err
 
 }
 
-func (s *Service) GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error) {
+func (s *service) GetCountMetrics(ctx context.Context, request *model.Metrics) (int64, error) {
 	value, err := s.repository.CountGetter(ctx, request.Name)
 	return value, err
 }
 
-func (s *Service) PrintForHTML() string {
+func (s *service) PrintForHTML() string {
 	htmlPage := s.repository.GetAllMetrics()
 	return htmlPage
 }
 
-func (s *Service) LogInfo(args ...interface{}) {
+func (s *service) LogInfo(args ...interface{}) {
 	s.log.Sugar.Info(args)
 }

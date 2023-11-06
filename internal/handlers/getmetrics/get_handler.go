@@ -1,4 +1,4 @@
-package get
+package getmetrics
 
 import (
 	"context"
@@ -23,14 +23,14 @@ type Handler struct {
 	cfg        config.RunConfig
 }
 
-func NewGetHandler(s metricsGet, cfg config.RunConfig) *Handler {
+func NewHandler(s metricsGet, cfg config.RunConfig) *Handler {
 	return &Handler{
 		metricsGet: s,
 		cfg:        cfg,
 	}
 }
 
-func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Metrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusNotFound)
 		return

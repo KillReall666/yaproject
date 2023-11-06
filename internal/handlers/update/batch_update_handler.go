@@ -33,19 +33,19 @@ func NewBatchHandler(sm BatchSaveMetrics, l Logger, c config.RunConfig) *BatchHa
 
 func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusNotFound)
+		http.Error(w, "поддерживает только POST запросы!", http.StatusNotFound)
 		return
 	}
 
 	var metricsPack, metricsForRequestPack []model.MetricsJSON
 	var metricsForRequest model.MetricsJSON
 
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 
 	if err := json.NewDecoder(r.Body).Decode(&metricsPack); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		h.logger.LogInfo("error when decode in batch handler: ", err)
+		h.logger.LogInfo("ошибка при декодировании батча метрик: ", err)
 		return
 	}
 
@@ -101,7 +101,6 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 
 	jsonData, err := json.Marshal(metricsForRequestPack)
 	if err != nil {
-		h.logger.LogInfo("err 500 when marshal batch metrics: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -110,6 +109,6 @@ func (h *BatchHandler) BatchUpdateMetrics(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsonData)
 	if err != nil {
-		h.logger.LogInfo("write jsonData err: ", err)
+		h.logger.LogInfo("ошибка при записи jsonData: ", err)
 	}
 }
