@@ -18,8 +18,6 @@ func main() {
 
 	cli := agent.NewClient(cfg, gms, log)
 
-	//app := appclient.NewAgentService(log, cli)
-
 	err = cli.Run()
 	if err != nil {
 		log.LogInfo("client died on error: %v", err)
