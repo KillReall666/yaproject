@@ -28,13 +28,13 @@ func TestGetUrl(t *testing.T) {
 			want:   []string{"html", "gauge", "alloc"},
 		},
 		{
-			name:   "first get-request test with value",
+			name:   "first getmetrics-request test with value",
 			method: http.MethodGet,
 			url:    "/value/gauge/alloc/666",
 			want:   []string{"value", "gauge", "alloc", "666"},
 		},
 		{
-			name:   "second get-request test without value",
+			name:   "second getmetrics-request test without value",
 			method: http.MethodGet,
 			url:    "/value/gauge/alloc",
 			want:   []string{"value", "gauge", "alloc"},

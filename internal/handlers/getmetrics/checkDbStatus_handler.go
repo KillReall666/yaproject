@@ -1,4 +1,4 @@
-package get
+package getmetrics
 
 import (
 	"net/http"

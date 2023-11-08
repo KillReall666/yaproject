@@ -10,16 +10,16 @@ import (
 
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/logger"
-	"github.com/KillReall666/yaproject/internal/storage"
+	"github.com/KillReall666/yaproject/internal/storage/memstore"
 )
 
 type FileIoStruct struct {
 	cfg        config.RunConfig
-	memStorage *storage.MemStorage
+	memStorage *memstore.MemStorage
 	logger     *logger.Logger
 }
 
-func NewFileIo(cfg config.RunConfig, store *storage.MemStorage, log *logger.Logger) *FileIoStruct {
+func NewFileIo(cfg config.RunConfig, store *memstore.MemStorage, log *logger.Logger) *FileIoStruct {
 	return &FileIoStruct{
 		cfg:        cfg,
 		memStorage: store,

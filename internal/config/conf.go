@@ -16,6 +16,9 @@ type RunConfig struct {
 	Interval              int    `env:"STORE_INTERVAL"`
 	Path                  string `env:"FILE_STORAGE_PATH"`
 	Restore               bool   `env:"RESTORE"`
+	HashKey               string `env:"KEY"`
+	RateLimit             int    `env:"RATE_LIMIT"`
+	UseDB                 bool
 }
 
 const (
@@ -28,12 +31,15 @@ const (
 	defaultRestore            = true
 )
 
-func LoadAgentConfig() RunConfig {
+func LoadForAgent() RunConfig {
 	cfg := RunConfig{}
 
 	flag.IntVar(&cfg.DefaultPollInterval, "p", defaultPollInterval, "metrics update interval in seconds")
 	flag.IntVar(&cfg.DefaultReportInterval, "r", defaultReportInterval, "metrics sending interval in seconds")
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
+	flag.StringVar(&cfg.HashKey, "k", "", "hash key")
+	flag.IntVar(&cfg.RateLimit, "l", 5, "pool workers limit")
+
 	flag.Parse()
 
 	err := env.Parse(&cfg)
@@ -44,7 +50,7 @@ func LoadAgentConfig() RunConfig {
 	return cfg
 }
 
-func LoadServerConfig() (RunConfig, bool, error) {
+func LoadForServer() (RunConfig, error) {
 	cfg := RunConfig{}
 
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
@@ -52,6 +58,7 @@ func LoadServerConfig() (RunConfig, bool, error) {
 	flag.IntVar(&cfg.Interval, "i", defaultSaveOnDiskInterval, "time interval in seconds after which the current server readings are saved to disk")
 	flag.StringVar(&cfg.Path, "f", defaultPathOfFile, "full name of the file where the current values are saved")
 	flag.BoolVar(&cfg.Restore, "r", defaultRestore, "load or not previously saved values from specified files when starting the server")
+	flag.StringVar(&cfg.HashKey, "k", "", "hash key")
 	flag.Parse()
 
 	err := env.Parse(&cfg)
@@ -59,12 +66,12 @@ func LoadServerConfig() (RunConfig, bool, error) {
 		log.Println(err)
 	}
 
-	var connStr = true
+	cfg.UseDB = true
 	if cfg.DefaultDBConnStr == "" {
-		connStr = false
+		cfg.UseDB = false
 		err = errors.New("metric storage switched to memory, the database is not connected")
-		return cfg, connStr, err
+		return cfg, err
 	}
 
-	return cfg, connStr, err
+	return cfg, err
 }
