@@ -21,6 +21,7 @@ func main() {
 	err = cli.Run()
 	if err != nil {
 		log.LogInfo("client died on error: %v", err)
+
 	}
 
 }

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/KillReall666/yaproject/internal/handlers/html"
-	"github.com/KillReall666/yaproject/internal/handlers/update"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
+	"github.com/KillReall666/yaproject/internal/handlers/html"
+	"github.com/KillReall666/yaproject/internal/handlers/update"
 
 	"github.com/KillReall666/yaproject/internal/config"
 	"github.com/KillReall666/yaproject/internal/handlers/getmetrics"
@@ -53,6 +54,7 @@ func main() {
 	err = http.ListenAndServe(cfg.Address, r)
 	if err != nil {
 		log.LogInfo("server is down:", err)
+
 		panic(fmt.Errorf("server is down: %v", err))
 	}
 

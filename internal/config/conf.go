@@ -39,7 +39,6 @@ func LoadForAgent() RunConfig {
 	flag.StringVar(&cfg.Address, "a", defaultServer, "server address [host:port]")
 	flag.StringVar(&cfg.HashKey, "k", "", "hash key")
 	flag.IntVar(&cfg.RateLimit, "l", 5, "pool workers limit")
-
 	flag.Parse()
 
 	err := env.Parse(&cfg)
