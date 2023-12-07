@@ -16,6 +16,7 @@ type Repository interface {
 	GaugeGetter(ctx context.Context, key string) (float64, error)
 	CountGetter(ctx context.Context, key string) (int64, error)
 	GetAllMetrics() string
+	DBStatusCheck() error
 }
 
 func NewStore(cfg config.RunConfig, log *logger.Logger) (Repository, error) {

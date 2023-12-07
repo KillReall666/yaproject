@@ -38,7 +38,7 @@ func (h *DBStatusHandler) DBStatusCheck(w http.ResponseWriter, r *http.Request) 
 	err := h.db.DBStatusCheck()
 	if err != nil {
 		w.WriteHeader(500)
-		h.logger.LogInfo("connection with postgres not available")
+		h.logger.LogInfo("connection with postgres not available", err)
 	}
 
 	w.WriteHeader(200)

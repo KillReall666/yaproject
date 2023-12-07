@@ -22,14 +22,7 @@ type Repository interface {
 	GaugeGetter(ctx context.Context, key string) (float64, error)
 	CountGetter(ctx context.Context, key string) (int64, error)
 	GetAllMetrics() string
-}
-
-func (s *service) DBStatusCheck() error {
-	err := s.db.DBStatusCheck()
-	if err != nil {
-		return err
-	}
-	return nil
+	DBStatusCheck() error
 }
 
 func NewService(log *logger.Logger, storage Repository) *service {
@@ -76,4 +69,12 @@ func (s *service) PrintForHTML() string {
 
 func (s *service) LogInfo(args ...interface{}) {
 	s.log.Sugar.Info(args)
+}
+
+func (s *service) DBStatusCheck() error {
+	err := s.repository.DBStatusCheck()
+	if err != nil {
+		return err
+	}
+	return nil
 }

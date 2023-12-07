@@ -15,6 +15,11 @@ type MemStorage struct {
 	storage map[string]*Metrics
 }
 
+func (ms *MemStorage) DBStatusCheck() error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewMemStorage() *MemStorage {
 	return &MemStorage{
 		storage: make(map[string]*Metrics),
